@@ -38,9 +38,9 @@ $ git clone https://github.com:vigo/textmate2-ruff-linter.git Python-Ruff-Linter
 | `TM_PYRUFF_TOOLTIP_LEFT_PADDING` | Padding value for lines to fit in tool tip window | `20` |
 | `TM_PYRUFF_DEBUG` | Enable debug mode | `false` |
 
-TextMate sometimes doesn’t apply environment variable creation from command-line.
-If this doesn’t work, you need to app manually from **TextMate > Settings** pull down
-menu.
+TextMate sometimes doesn’t apply environment variable creation from
+command-line. If this doesn’t work, you need to apply/set manually from
+**TextMate > Settings** pull down menu.
 
 ```bash
 $ defaults write com.macromates.TextMate environmentVariables \
