@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>contactEmailRot13</key>
+	<string>hthebmlvyznmry@tznvy.pbz</string>
+	<key>contactName</key>
+	<string>Uğur Özyılmazel</string>
+	<key>description</key>
+	<string>Ruff is an extremely fast Python linter, written in Rust.
+https://beta.ruff.rs/docs/</string>
+	<key>name</key>
+	<string>Python Ruff Linter</string>
+	<key>uuid</key>
+	<string>F53A0FF3-C771-4683-B504-6D60EBABEF84</string>
+</dict>
+</plist>
