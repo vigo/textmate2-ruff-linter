@@ -37,6 +37,7 @@ $ git clone https://github.com:vigo/textmate2-ruff-linter.git Python-Ruff-Linter
 | `TM_PYRUFF_TOOLTIP_BORDER_CHAR` | Top and bottom line’s char | `-` |
 | `TM_PYRUFF_TOOLTIP_LEFT_PADDING` | Padding value for lines to fit in tool tip window | `20` |
 | `TM_PYRUFF_DEBUG` | Enable debug mode | `false` |
+| `TM_PYRUFF_DISABLE` | Disable bundle | `false` |
 
 TextMate sometimes doesn’t apply environment variable creation from
 command-line. If this doesn’t work, you need to apply/set manually from
@@ -50,6 +51,30 @@ $ defaults write com.macromates.TextMate environmentVariables \
 $ defaults write com.macromates.TextMate environmentVariables \
     -array-add "{enabled = 1; value = \"true\"; name = \"TM_PYRUFF_ENABLE_AUTOFIX\"; }"
 ```
+
+---
+
+## Change Log
+
+**2023-02-25**
+
+You can disable bundle via setting an environment variable or adding a comment
+into first line of code:
+
+```python
+# TM_PYRUFF_DISABLE
+print(f'hello')
+a = 1
+print(f"hello2")
+b = 3
+
+def foo(x, y):
+    '''aaaaaaaaaaaaaaaaaaaa'''
+    print(bar)
+
+```
+
+You can easily turn on/off bundle w/o changing settings.
 
 ---
 

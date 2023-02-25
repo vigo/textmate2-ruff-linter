@@ -13,6 +13,7 @@ LINT_SUCCESS_MESSAGE = "all good 👍"
 RUFF_NOT_FOUND_MESSAGE = "error, ruff executable not found, please install ruff or set TM_PYRUFF environment variable"
 AUTOFIX_ENABLER_MESSAGE = "set TM_PYRUFF_ENABLE_AUTOFIX environment variable to fix automatically"
 
+PYRUFF_DISABLE = ENV["TM_PYRUFF_DISABLE"] || nil
 PYRUFF_ENABLE_AUTOFIX = ENV["TM_PYRUFF_ENABLE_AUTOFIX"] || nil
 PYRUFF_DEBUG = ENV["TM_PYRUFF_DEBUG"] || nil
 
@@ -152,15 +153,16 @@ module Ruff
     end
   end
 
+  def document_first_line_has_disable_comment(env_name)
+    return $DOCUMENT.split('\n').first.include?(env_name)
+  end
+
   def auto_fix_errors
-    return if $DOCUMENT.empty?
+    TextMate.exit_discard if $DOCUMENT.empty? or PYRUFF_DISABLE
+    TextMate.exit_discard unless PYRUFF_ENABLE_AUTOFIX
+    TextMate.exit_discard if document_first_line_has_disable_comment("TM_PYRUFF_DISABLE")
 
     $OUTPUT = $DOCUMENT
-    
-    unless PYRUFF_ENABLE_AUTOFIX
-      print $OUTPUT
-      return
-    end
     
     show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
 
@@ -175,7 +177,8 @@ module Ruff
   def run_ruff_linter
     reset_markers
     
-    return if $DOCUMENT.empty?
+    TextMate.exit_discard if $DOCUMENT.empty? or PYRUFF_DISABLE
+    TextMate.exit_discard if document_first_line_has_disable_comment("TM_PYRUFF_DISABLE")
 
     show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
     
