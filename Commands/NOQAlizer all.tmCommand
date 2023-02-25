@@ -8,26 +8,26 @@
 	<string>#!/usr/bin/env ruby18 -wKU
 require "#{ENV['TM_BUNDLE_SUPPORT']}/helper"
 
-Ruff.auto_fix_errors
+Ruff.noqalize_all
 </string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>
 	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>^N</string>
 	<key>name</key>
-	<string>Auto fix errors</string>
+	<string>NOQAlizer all</string>
 	<key>outputCaret</key>
 	<string>interpolateByLine</string>
 	<key>outputFormat</key>
 	<string>text</string>
 	<key>outputLocation</key>
-	<string>replaceDocument</string>
+	<string>discard</string>
 	<key>scope</key>
 	<string>source.python</string>
-	<key>semanticClass</key>
-	<string>callback.document.will-save.1</string>
 	<key>uuid</key>
-	<string>F2DC6971-9B06-4593-9EC6-D467AADB43AF</string>
+	<string>3917DA22-D1C0-4434-A85A-8C79DA169969</string>
 	<key>version</key>
 	<integer>2</integer>
 </dict>

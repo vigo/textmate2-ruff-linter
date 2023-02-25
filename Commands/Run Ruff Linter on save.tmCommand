@@ -25,7 +25,7 @@ Ruff.run_ruff_linter
 	<key>scope</key>
 	<string>source.python</string>
 	<key>semanticClass</key>
-	<string>callback.document.did-save</string>
+	<string>callback.document.did-save.1</string>
 	<key>uuid</key>
 	<string>9DB6C68B-B678-40FA-962B-799733FCA199</string>
 	<key>version</key>

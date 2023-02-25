@@ -58,7 +58,23 @@ $ defaults write com.macromates.TextMate environmentVariables \
 
 **2023-02-25**
 
-If you press <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>R</kbd> (option + command + R) 
+If you press <kbd>⌃</kbd> + <kbd>⇧</kbd> + <kbd>N</kbd> (control + shift + N) 
+you can run **NOQAlizer all**. This adds `# noqa:` directive to your all invalid
+rules:
+
+```python
+print(f'hello')  # noqa: D100, T201, F541
+a = 1
+print(f"hello2")  # noqa: Q000, T201, F541
+b = 3
+
+def foo(x, y):  # noqa: ANN001, ARG001, ANN201
+    '''aaaaaaaaaaaaaaaaaaaa'''  # noqa: D300, D403, D400, Q002, D415
+    print(bar)  # noqa: T201, F821
+
+```
+
+If you press <kbd>⌃</kbd> + <kbd>⇧</kbd> + <kbd>R</kbd> (control + shift + R) 
 you can display existing errors description in a new window! You can also run
 this from pull down menu: **Show rules for existing errors**
 

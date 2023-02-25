@@ -171,15 +171,12 @@ module Ruff
     show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
   end
   
-
   def auto_fix_errors
     TextMate.exit_discard unless PYRUFF_ENABLE_AUTOFIX
     setup
 
     $OUTPUT = $DOCUMENT
     
-    show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
-
     args = ["--fix", "--stdin-filename", ENV["TM_FILENAME"], "-"]
     $OUTPUT, err = TextMate::Process.run(CMD, args, :input => $DOCUMENT)
 
@@ -197,11 +194,7 @@ module Ruff
     
     unless out.empty?
       _, _, error_codes = mark_errors(out)
-      
-      # data = []
-      # error_codes.each do |error_code|
-      # end
-      
+
       rule_docs = []
       error_codes.each do |error_code|
         args = ["rule", error_code]
@@ -217,10 +210,20 @@ module Ruff
     
   end
   
+  def noqalize_all
+    setup
+    
+    args = ["--add-noqa"]
+
+    _, out = TextMate::Process.run(CMD, args, ENV["TM_FILEPATH"])
+    show_message(boxify(out)) unless out.empty?
+  end
+  
   def run_ruff_linter
     setup
     
     args = []
+    
     out, err = TextMate::Process.run(CMD, args, ENV["TM_FILEPATH"])
     show_message(err) unless err.empty?
     
