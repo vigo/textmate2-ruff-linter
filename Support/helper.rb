@@ -125,10 +125,15 @@ module Ruff
       out << ["", AUTOFIX_ENABLER_MESSAGE] unless PYRUFF_ENABLE_AUTOFIX
     end
     
+    error_codes = []
+    
     errors.each do |line_number, vals|
       messages = []
       vals.each do |val|
-        messages << "#{val[1]} - #{val[2]}"
+        error_code = val[1]
+        error_message = val[2]
+        messages << "#{error_code} - #{error_message}"
+        error_codes << error_code
       end
       
       tm_args = [
@@ -142,7 +147,7 @@ module Ruff
       system(ENV["TM_MATE"], *tm_args)
     end
     
-    return error_counter, out.join("\n")
+    return error_counter, out.join("\n"), error_codes
   end
 
   def show_message(msg)
@@ -157,10 +162,19 @@ module Ruff
     return $DOCUMENT.split('\n').first.include?(env_name)
   end
 
-  def auto_fix_errors
+  def setup
+    reset_markers
+
     TextMate.exit_discard if $DOCUMENT.empty? or PYRUFF_DISABLE
-    TextMate.exit_discard unless PYRUFF_ENABLE_AUTOFIX
     TextMate.exit_discard if document_first_line_has_disable_comment("TM_PYRUFF_DISABLE")
+
+    show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
+  end
+  
+
+  def auto_fix_errors
+    TextMate.exit_discard unless PYRUFF_ENABLE_AUTOFIX
+    setup
 
     $OUTPUT = $DOCUMENT
     
@@ -174,13 +188,37 @@ module Ruff
     print $OUTPUT
   end
 
-  def run_ruff_linter
-    reset_markers
-    
-    TextMate.exit_discard if $DOCUMENT.empty? or PYRUFF_DISABLE
-    TextMate.exit_discard if document_first_line_has_disable_comment("TM_PYRUFF_DISABLE")
+  def show_rules
+    setup
 
-    show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
+    args = ["--stdin-filename", ENV["TM_FILENAME"], "-"]
+    out, err = TextMate::Process.run(CMD, args, :input => $DOCUMENT)
+    show_message(err) unless err.empty?
+    
+    unless out.empty?
+      _, _, error_codes = mark_errors(out)
+      
+      # data = []
+      # error_codes.each do |error_code|
+      # end
+      
+      rule_docs = []
+      error_codes.each do |error_code|
+        args = ["rule", error_code]
+        doc, err_doc = TextMate::Process.run(CMD, args)
+        show_message(err_doc) unless err_doc.empty?
+        rule_docs << doc
+        rule_docs << "---"
+        rule_docs << ""
+      end
+
+      TextMate.exit_create_new_document(rule_docs.join("\n"))
+    end
+    
+  end
+  
+  def run_ruff_linter
+    setup
     
     args = []
     out, err = TextMate::Process.run(CMD, args, ENV["TM_FILEPATH"])
@@ -189,7 +227,7 @@ module Ruff
     if out.empty?
       show_message(boxify(LINT_SUCCESS_MESSAGE))
     else
-      error_amount, errors = mark_errors(out)
+      error_amount, errors, error_codes = mark_errors(out)
       error_message = sprintf(
         "Fix (%d) %s:\n\n%s",
         error_amount, 

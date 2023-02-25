@@ -58,6 +58,10 @@ $ defaults write com.macromates.TextMate environmentVariables \
 
 **2023-02-25**
 
+If you press <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>R</kbd> (option + command + R) 
+you can display existing errors description in a new window! You can also run
+this from pull down menu: **Show rules for existing errors**
+
 You can disable bundle via setting an environment variable or adding a comment
 into first line of code:
 
