@@ -24,7 +24,7 @@ You need to install `ruff`. I prefer `brew`. It’s also available via `pip`;
 ```bash
 $ brew install ruff
 $ cd ~/Library/Application\ Support/TextMate/Bundles/
-$ git clone https://github.com:vigo/textmate2-ruff-linter.git Python-Ruff-Linter.tmbundle
+$ git clone https://github.com/vigo/textmate2-ruff-linter.git Python-Ruff-Linter.tmbundle
 ```
 
 ### TextMate Environment Variables
