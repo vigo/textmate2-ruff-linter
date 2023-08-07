@@ -1,6 +1,8 @@
 ![Version](https://img.shields.io/badge/version-0.3.1-orange.svg?style=for-the-badge)
 ![TextMate](https://img.shields.io/badge/textmate-2.0.23-green.svg?style=for-the-badge)
 ![macOS](https://img.shields.io/badge/macos-ventura-yellow.svg?style=for-the-badge)
+![Powered by Rake](https://img.shields.io/badge/powered_by-rake-blue?logo=ruby)
+
 
 # Python Ruff Linter for TextMate2
 
