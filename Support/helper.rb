@@ -2,10 +2,7 @@
 
 require 'logger'
 
-# require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
-# require ENV['TM_SUPPORT_PATH'] + '/lib/textmate'
 require ENV['TM_SUPPORT_PATH'] + '/lib/tm/executor'
-# require ENV['TM_SUPPORT_PATH'] + '/lib/tm/process'
 
 $CMD = nil
 
@@ -261,7 +258,7 @@ module Ruff
     
     if TM_PYRUFF_OPTIONS && any_config_file_exist?
       opts = TM_PYRUFF_OPTIONS.split(" ")
-      logger.debug "opts: #{TM_PYRUFF_OPTIONS}"
+      logger.debug "we have options: #{TM_PYRUFF_OPTIONS}"
       args.concat(opts)
     end
     
@@ -270,10 +267,9 @@ module Ruff
       args.unshift("check")
     when "autofix"
       args.unshift("check")
-      args.concat(["--fix", "--stdin-filename", ENV['TM_FILENAME'], "-"])
+      args.concat(["--fix", "-"])
     when "imports"
-      args.unshift("check")
-      args.concat(["--select", "I", "--fix", "--stdin-filename", ENV['TM_FILENAME'], "-"])
+      args = ["check", "--select", "I", "--fix", "-"]
     when "noqalize"
       args = ["check", "--add-noqa"]
     end
@@ -288,9 +284,7 @@ module Ruff
       result, err = TextMate::Process.run(cmd, args, :input => document)
     end
 
-    unless err.empty?
-      logger.error "run has an error on #{subcmd}: #{err}"
-    end
+    logger.error "run_ruff run error on [#{subcmd}]: #{err}" unless err.empty?
     return result, err
   end
   
@@ -308,7 +302,7 @@ module Ruff
     display_err(err) unless ok
 
     result, err = run_ruff("noqalize")
-    logger.info "noqalize err: #{err}, #{err.empty?}"
+    logger.info "noqalize_all error: #{err}"
     display_err(err)
   end
   
@@ -326,24 +320,10 @@ module Ruff
     ok, err = setup_ok?
     display_err(err) unless ok
     
-    result, err = run_ruff("imports")
-    if err.include?("ruff failed")
-      Storage.add("imports", err)
-      display_err(err)
-    else
-      self.document = result
-      Storage.destroy("imports")
-    end
+    result, _ = run_ruff("imports")
     
     if TM_PYRUFF_ENABLE_AUTOFIX || manual
-      result, err = run_ruff("autofix")
-      if err.include?("failed") || err.include?("error")
-        Storage.add("autofix", err)
-        display_err(err)
-      else
-        self.document = result
-        Storage.destroy("autofix")
-      end
+      result, _ = run_ruff("autofix")
     end
     
     print document
@@ -362,36 +342,15 @@ module Ruff
     ok, err = setup_ok?
     display_err(err) unless ok
     
-    if !Storage.get("imports").nil?
-      logger.info "skip running run_ruff_linter, due to imports error"
-      TextMate.exit_discard
-    end
-
-    if !Storage.get("autofix").nil?
-      logger.info "skip running run_ruff_linter, due to autofix error"
-      TextMate.exit_discard
-    end
-    
     all_errors = {}
     
     result, err = run_ruff("check")
 
-    unless err.empty?
-      lerr = "⚠️ possible configuration or parse error ⚠️\n\n#{err}"
-
-      if err.include?(TM_FILENAME)
-        regex = /^(\w+):\s+.*#{Regexp.escape(TM_FILENAME)}:(\d+):(\d+)/
-        matches = err.match(regex)
-        if matches
-          mark = matches[1]
-          line_number = matches[2]
-          set_marker(mark, line_number, err.chomp)
-        end
-      end
-      display_err(lerr)
+    if result.empty?
+      display_err(err)
     end
-
-    extra_information = extract_ruff_errors(result, all_errors)
+    
+    extra_information = extract_ruff_errors(result, all_errors, err)
     set_markers("error", all_errors)
     error_report = generate_error_report(all_errors, extra_information)
 
@@ -442,9 +401,21 @@ module Ruff
     return error_report
   end
   
-  def extract_ruff_errors(errors, all_errors)
+  def extract_ruff_errors(errors, all_errors, other_errors)
     extra_information = []
-
+    
+    logger.error "other_errors: #{other_errors}"
+    
+    unless other_errors.empty?
+      dlm = "-" * TOOLTIP_LINE_LENGTH.to_i
+      other_errors_list = other_errors.split("\n")
+      other_errors_list_count = other_errors_list.size
+      other_errors_list.map!{|line| "  - #{line}"}
+      other_errors_list.unshift("⚠️ #{other_errors_list_count} extra(s) ⚠️", dlm)
+      other_errors_list << dlm
+      extra_information.concat(other_errors_list)
+    end
+    
     # skip first line, name of the file.
     errors.split("\n")[1..-1].each do |line|
       if line.start_with?(" ")

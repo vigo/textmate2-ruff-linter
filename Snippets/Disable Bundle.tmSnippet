@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string># TM_PYRUFF_DISABLE  # must be the first line</string>
+	<key>name</key>
+	<string>Disable Bundle</string>
+	<key>scope</key>
+	<string>source.python.ruff</string>
+	<key>tabTrigger</key>
+	<string>disable</string>
+	<key>uuid</key>
+	<string>43225319-9C68-460C-9F1A-3EF06B4B8B60</string>
+</dict>
+</plist>
