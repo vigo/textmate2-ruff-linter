@@ -8,19 +8,19 @@
 	<string>Uğur Özyılmazel</string>
 	<key>description</key>
 	<string>Ruff is an extremely fast Python linter, written in Rust.
-https://beta.ruff.rs/docs/</string>
-    <key>mainMenu</key>
-    <dict>
-        <key>items</key>
-        <array>
-            <string>9DB6C68B-B678-40FA-962B-799733FCA199</string>
+https://docs.astral.sh/ruff/</string>
+	<key>mainMenu</key>
+	<dict>
+		<key>items</key>
+		<array>
+			<string>9DB6C68B-B678-40FA-962B-799733FCA199</string>
+			<string>F2DC6971-9B06-4593-9EC6-D467AADB43AF</string>
+			<string>------------------------------------</string>
+            <string>D16E4203-64E5-46BF-B8B9-6B5AABA4795B</string>
+			<string>3917DA22-D1C0-4434-A85A-8C79DA169969</string>
             <string>------------------------------------</string>
-            <string>7F9DF791-D14A-44AD-A580-75EA74F28895</string>
-            <string>3917DA22-D1C0-4434-A85A-8C79DA169969</string>
-            <string>------------------------------------</string>
-            <string>F2DC6971-9B06-4593-9EC6-D467AADB43AF</string>
-        </array>
-    </dict>
+		</array>
+	</dict>
 	<key>name</key>
 	<string>Python Ruff Linter</string>
 	<key>uuid</key>

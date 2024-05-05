@@ -1,32 +1,185 @@
 #!/usr/bin/env ruby18 -W0
 
+require 'logger'
+
+# require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
+# require ENV['TM_SUPPORT_PATH'] + '/lib/textmate'
 require ENV['TM_SUPPORT_PATH'] + '/lib/tm/executor'
+# require ENV['TM_SUPPORT_PATH'] + '/lib/tm/process'
 
-$DOCUMENT = STDIN.read
-$OUTPUT = ""
+$CMD = nil
 
-TOOLTIP_LINE_LENGTH = ENV["TM_PYRUFF_TOOLTIP_LINE_LENGTH"] || "120"
-TOOLTIP_LEFT_PADDING = ENV["TM_PYRUFF_RESULT_TM_PYRUFF_TOOLTIP_LEFT_PADDING"] || "20"
-TOOLTIP_BORDER_CHAR = ENV["TM_PYRUFF_TOOLTIP_BORDER_CHAR"] || "-"
+STORAGE_FILE_PREFIX = "/tmp/textmate-python-ruff-"
+LOG_FILE = "/tmp/textmate-python-ruff.log"
+LOG_PROGNAME = "Python-RUFF"
 
-LINT_SUCCESS_MESSAGE = "all good 👍"
-RUFF_NOT_FOUND_MESSAGE = "error, ruff executable not found, please install ruff or set TM_PYRUFF environment variable"
-AUTOFIX_ENABLER_MESSAGE = "set TM_PYRUFF_ENABLE_AUTOFIX environment variable to fix automatically"
+module Configuration
+  TM_PROJECT_DIRECTORY = ENV["TM_PROJECT_DIRECTORY"]
+  TM_FILENAME = ENV["TM_FILENAME"]
 
-PYRUFF_DISABLE = ENV["TM_PYRUFF_DISABLE"] || nil
-PYRUFF_ENABLE_AUTOFIX = ENV["TM_PYRUFF_ENABLE_AUTOFIX"] || nil
-PYRUFF_DEBUG = ENV["TM_PYRUFF_DEBUG"] || nil
+  TOOLTIP_LINE_LENGTH = ENV["TM_PYRUFF_TOOLTIP_LINE_LENGTH"] || "100"
+  TOOLTIP_LEFT_PADDING = ENV["TM_PYRUFF_TOOLTIP_LEFT_PADDING"] || "2"
+  TOOLTIP_BORDER_CHAR = ENV["TM_PYRUFF_TOOLTIP_BORDER_CHAR"] || "-"
+  
+  ENABLE_LOGGING = !ENV["ENABLE_LOGGING"].nil?
+  TM_PYRUFF_DISABLE = ENV["TM_PYRUFF_DISABLE"].nil?
+  TM_PYRUFF_ENABLE_AUTOFIX = !ENV["TM_PYRUFF_ENABLE_AUTOFIX"].nil?
+  TM_PYRUFF_OPTIONS = ENV["TM_PYRUFF_OPTIONS"]
 
-CMD = ENV["TM_PYRUFF"] || `command -v ruff`.chomp
+  def self.logging_enabled?
+    ENABLE_LOGGING
+  end
+end
 
-module Ruff
-  module_function
 
-  def pluralize(n, singular, plural=nil)
-    return plural.nil? ? singular + "s" : plural if n > 1
-    return singular
+module LoggingUtility
+  BLACK            = "\e[30m"
+  RED              = "\e[31m"
+  RED_BOLD         = "\e[01;31m"
+  GREEN            = "\e[32m"
+  GREEN_BOLD       = "\e[01;32m"
+  YELLOW           = "\e[33m"
+  YELLOW_BOLD      = "\e[01;33m"
+  BLUE             = "\e[34m"
+  BLUE_BOLD        = "\e[01;34m"
+  MAGENTA          = "\e[35m"
+  MAGENTA_BOLD     = "\e[01;35m"
+  CYAN             = "\e[36m"
+  CYAN_BOLD        = "\e[01;36m"
+  WHITE            = "\e[37m"
+  WHITE_BOLD       = "\e[01;37m"
+  EXTENDED         = "\e[38m"
+  BLINK            = "\e[5m"
+  OFF              = "\e[0m"
+  
+  def severity_color(severity)
+    case severity
+    when "DEBUG" then BLUE
+    when "INFO" then GREEN
+    when "WARN" then YELLOW
+    when "ERROR" then RED
+    when "FATAL" then MAGENTA
+    when "UNKNOWN" then BLINK
+    end
+  end
+  
+  module_function :severity_color
+  
+  def self.logger
+    if Configuration.logging_enabled?
+      @logger = Logger.new(LOG_FILE)
+      @logger.level = Logger::DEBUG
+      @logger.progname = LOG_PROGNAME
+      @logger.formatter = proc do |severity, _, progname, msg|
+        color_code = severity_color(severity)
+        caller_info = caller(5).first
+        method_name = caller_info.match(/`([^']*)'/) ? caller_info.match(/`([^']*)'/)[1] : "unknown"
+        "[#{WHITE_BOLD}#{progname}#{OFF}][#{color_code}#{severity}#{OFF}][#{CYAN_BOLD}#{method_name}#{OFF}]: #{msg}\n"
+      end
+    else
+      @logger = Logger.new(nil)
+    end
+    @logger
+  end
+end
+
+
+module Storage
+  def self.file_path(name)
+    "#{STORAGE_FILE_PREFIX}#{name}.error"
   end
 
+  def self.add(name, error_message)
+    File.open(file_path(name), 'w') do |file|
+      file.puts error_message
+    end
+    logger.info "storage - adding error for #{name}"
+  end
+
+  def self.get(name)
+    path = file_path(name)
+    if File.exist?(path)
+      logger.info "storage - error file exists for #{name}"
+      File.open(path, 'r') do |file|
+        return file.read
+      end
+    end
+    nil
+  end
+
+  def self.destroy(name)
+    path = file_path(name)
+    if File.exist?(path)
+      File.delete(path)
+      logger.info "storage - destroyed error file for #{name}"
+    end
+  end
+  
+  def logger
+    LoggingUtility.logger
+  end
+  
+  module_function :logger
+end
+
+
+module Ruff
+  include Configuration
+  include LoggingUtility
+  include Storage
+  
+  @document = nil
+  
+  module_function
+  
+  def read_stdin
+    @document = STDIN.read
+  end  
+
+  def document
+    @document
+  end
+
+  def document=(value)
+    @document = value
+  end
+  
+  def document_empty?
+    document.nil? || document.empty? || document.match(/\S/).nil?
+  end
+
+  def reset_markers
+    system(ENV["TM_MATE"], "--uuid", ENV["TM_DOCUMENT_UUID"], "--clear-mark=note",
+                                                              "--clear-mark=warning",
+                                                              "--clear-mark=error"
+    )
+  end
+
+  def set_marker(mark, line, msg)
+    unless line.nil?
+      tm_args = [
+        '--uuid', ENV['TM_DOCUMENT_UUID'],
+        '--line', "#{line}",
+        '--set-mark', "#{mark}:#{msg}",
+      ]
+      system(ENV['TM_MATE'], *tm_args)
+    end
+  end
+
+  def set_markers(mark, errors_list)
+    errors_list.each do |line_number, errors|
+      messages = []
+      errors.each do |data|
+        messages << "#{data[:message]}"
+      end
+      set_marker(mark, line_number, messages.join("\n"))
+    end
+  end
+  
+  def display_err(msg)
+    TextMate.exit_show_tool_tip(boxify(msg))
+  end
+  
   def chunkify(s, max_len, left_padding)
     out = []
     s.split("\n").each do |line|
@@ -36,7 +189,7 @@ module Ruff
         words_len = 0
         line.split(" ").each do |word|
           unless words_matrix[words_matrix_index].nil?
-            words_len = words_matrix[words_matrix_index].join(' ').size
+            words_len = words_matrix[words_matrix_index].join(" ").size
           end
 
           if words_len + word.size < max_len
@@ -48,14 +201,14 @@ module Ruff
             words_matrix[words_matrix_index] << word
           end
         end
-      
+        
         rows = []
+        padding_word = " " * left_padding
         words_matrix.each do |row|
-          rows << row.join(" ")
+          rows << "#{padding_word}#{row.join(" ")}" 
         end
       
-        padding_word = " " * left_padding
-        out << rows.join("\n" + padding_word)
+        out << rows.join("\n#{padding_word}↪")
       else
         out << line
       end
@@ -66,7 +219,8 @@ module Ruff
   def boxify(txt)
     s = chunkify(txt, TOOLTIP_LINE_LENGTH.to_i, TOOLTIP_LEFT_PADDING.to_i)
     s = s.split("\n")
-    ll = s.map{|l| l.size}.max
+
+    ll = s.map{|l| l.size}.max || 1
     lsp = TOOLTIP_BORDER_CHAR * ll
     s.unshift(lsp)
     s << lsp
@@ -74,170 +228,249 @@ module Ruff
     s.join("\n")
   end
 
-  def reset_markers
-    system(
-      ENV["TM_MATE"],
-      "--uuid",
-      ENV["TM_DOCUMENT_UUID"],
-      "--clear-mark=note",
-      "--clear-mark=warning",
-      "--clear-mark=error"
-    )
-  end
-
-  def mark_errors(payload)
-    out = []
-    extra = []
-
-    error_counter = 0
-    errors = {}
-    
-    payload.split("\n").each do |line|
-      line = line.sub(ENV["TM_FILENAME"], "")
-
-      chunks = line.split(%r{:(\d+):(\d+):\s([A-Z0-9]+)\s})
-      if chunks[0].size == 0
-        error_counter = error_counter + 1
-
-        line_number = chunks[1]
-        column_number = chunks[2]
-        error_code = chunks[3]
-        error_message = chunks[4]
-        
-        errors[line_number] = [] unless errors.has_key?(line_number)
-        errors[line_number] << [column_number, error_code, error_message]
-        
-        out << sprintf(
-          "[%03d] %03d:%03d -> %s [%s]",
-          error_counter,
-          line_number,
-          column_number,
-          error_message,
-          error_code
-        )
-      else
-        extra << line
-      end
-    end
-    
-    if extra
-      out << ["", extra]
-      out << ["", AUTOFIX_ENABLER_MESSAGE] unless PYRUFF_ENABLE_AUTOFIX
-    end
-    
-    error_codes = []
-    
-    errors.each do |line_number, vals|
-      messages = []
-      vals.each do |val|
-        error_code = val[1]
-        error_message = val[2]
-        messages << "#{error_code} - #{error_message}"
-        error_codes << error_code
-      end
-      
-      tm_args = [
-        "--uuid",
-        ENV["TM_DOCUMENT_UUID"],
-        "--line",
-        "#{line_number}",
-        "--set-mark",
-        "error:#{messages.join("\n")}",
-      ]
-      system(ENV["TM_MATE"], *tm_args)
-    end
-    
-    return error_counter, out.join("\n"), error_codes
-  end
-
-  def show_message(msg)
-    if PYRUFF_DEBUG
-      TextMate.exit_create_new_document(msg)
-    else
-      TextMate.exit_show_tool_tip(msg)
-    end
-  end
-
-  def document_first_line_has_disable_comment(env_name)
-    return $DOCUMENT.split('\n').first.include?(env_name)
-  end
-
-  def setup
-    reset_markers
-
-    TextMate.exit_discard if $DOCUMENT.empty? or PYRUFF_DISABLE
-    TextMate.exit_discard if document_first_line_has_disable_comment("TM_PYRUFF_DISABLE")
-
-    show_message(boxify(RUFF_NOT_FOUND_MESSAGE)) if CMD.empty?
+  def bundle_enabled?
+    TM_PYRUFF_DISABLE
   end
   
-  def auto_fix_errors
-    TextMate.exit_discard unless PYRUFF_ENABLE_AUTOFIX
-    setup
-
-    $OUTPUT = $DOCUMENT
-    
-    args = ["--fix", "--stdin-filename", ENV["TM_FILENAME"], "-"]
-    $OUTPUT, err = TextMate::Process.run(CMD, args, :input => $DOCUMENT)
-
-    show_message(boxify(err)) unless err.empty?
-
-    print $OUTPUT
+  def logger
+    LoggingUtility.logger
   end
+  
+  def setup_ok?
+    cmd = `command -v ruff`.chomp
+    if cmd.empty?
+      logger.warn "ruff binary not found"
+      return false, "ruff binary not found"
+    end
+    $CMD = cmd
+    return true, "SETUP OK"
+  end
+  
+  def any_config_file_exist?
+    ["pyproject.toml", "ruff.toml"].each do |config|
+      return true if File.exist?(File.join(TM_PROJECT_DIRECTORY, config))
+    end
+    return false
+  end
+  
+  def run_ruff(subcmd)
+    cmd = $CMD
+    logger.info "cmd: #{cmd}"
 
-  def show_rules
-    setup
-
-    args = ["--stdin-filename", ENV["TM_FILENAME"], "-"]
-    out, err = TextMate::Process.run(CMD, args, :input => $DOCUMENT)
-    show_message(err) unless err.empty?
+    args = ["--output-format", "grouped"]
     
-    unless out.empty?
-      _, _, error_codes = mark_errors(out)
-
-      rule_docs = []
-      error_codes.each do |error_code|
-        args = ["rule", error_code]
-        doc, err_doc = TextMate::Process.run(CMD, args)
-        show_message(err_doc) unless err_doc.empty?
-        rule_docs << doc
-        rule_docs << "---"
-        rule_docs << ""
-      end
-
-      TextMate.exit_create_new_document(rule_docs.join("\n"))
+    if TM_PYRUFF_OPTIONS && any_config_file_exist?
+      opts = TM_PYRUFF_OPTIONS.split(" ")
+      logger.debug "opts: #{TM_PYRUFF_OPTIONS}"
+      args.concat(opts)
     end
     
+    case subcmd
+    when "check"
+      args.unshift("check")
+    when "autofix"
+      args.unshift("check")
+      args.concat(["--fix", "--stdin-filename", ENV['TM_FILENAME'], "-"])
+    when "imports"
+      args.unshift("check")
+      args.concat(["--select", "I", "--fix", "--stdin-filename", ENV['TM_FILENAME'], "-"])
+    when "noqalize"
+      args = ["check", "--add-noqa"]
+    end
+
+    cmd_version = `#{cmd} --version`.chomp
+    logger.debug "cmd: #{cmd} | version: #{cmd_version} | args: #{args.join(" ")}"
+
+    case subcmd
+    when "check","noqalize"
+      result, err = TextMate::Process.run(cmd, args, ENV['TM_FILEPATH'])
+    when "autofix", "imports"
+      result, err = TextMate::Process.run(cmd, args, :input => document)
+    end
+
+    unless err.empty?
+      logger.error "run has an error on #{subcmd}: #{err}"
+    end
+    return result, err
   end
   
   def noqalize_all
-    setup
-    
-    args = ["--add-noqa"]
+    logger.info "running noqalize_all"
+    reset_markers
 
-    _, out = TextMate::Process.run(CMD, args, ENV["TM_FILEPATH"])
-    show_message(boxify(out)) unless out.empty?
+    TextMate.exit_discard unless bundle_enabled?
+    read_stdin
+
+    TextMate.exit_discard if document_empty?
+    TextMate.exit_discard if document.split("\n").first.include?("# TM_PYRUFF_DISABLE")
+
+    ok, err = setup_ok?
+    display_err(err) unless ok
+
+    result, err = run_ruff("noqalize")
+    logger.info "noqalize err: #{err}, #{err.empty?}"
+    display_err(err)
   end
   
-  def run_ruff_linter
-    setup
+  # callback.document.will-save.50
+  def auto_fix_errors(manual=false)
+    logger.info "running auto_fix_errors"
+    reset_markers
+
+    TextMate.exit_discard unless bundle_enabled?
+    read_stdin
+
+    TextMate.exit_discard if document_empty?
+    TextMate.exit_discard if document.split("\n").first.include?("# TM_PYRUFF_DISABLE")
+
+    ok, err = setup_ok?
+    display_err(err) unless ok
     
-    args = []
-    
-    out, err = TextMate::Process.run(CMD, args, ENV["TM_FILEPATH"])
-    show_message(err) unless err.empty?
-    
-    if out.empty?
-      show_message(boxify(LINT_SUCCESS_MESSAGE))
+    result, err = run_ruff("imports")
+    if err.include?("ruff failed")
+      Storage.add("imports", err)
+      display_err(err)
     else
-      error_amount, errors, error_codes = mark_errors(out)
-      error_message = sprintf(
-        "Fix (%d) %s:\n\n%s",
-        error_amount, 
-        pluralize(error_amount, "error"), 
-        errors
-      )
-      show_message(boxify(error_message))
+      self.document = result
+      Storage.destroy("imports")
     end
+    
+    if TM_PYRUFF_ENABLE_AUTOFIX || manual
+      result, err = run_ruff("autofix")
+      if err.include?("failed") || err.include?("error")
+        Storage.add("autofix", err)
+        display_err(err)
+      else
+        self.document = result
+        Storage.destroy("autofix")
+      end
+    end
+    
+    print document
+  end
+  
+  # callback.document.did-save.50
+  def run_ruff_linter
+    logger.info "running run_ruff_linter"
+
+    TextMate.exit_discard unless bundle_enabled?
+    read_stdin
+    
+    TextMate.exit_discard if document_empty?
+    TextMate.exit_discard if document.split("\n").first.include?("# TM_PYRUFF_DISABLE")
+    
+    ok, err = setup_ok?
+    display_err(err) unless ok
+    
+    if !Storage.get("imports").nil?
+      logger.info "skip running run_ruff_linter, due to imports error"
+      TextMate.exit_discard
+    end
+
+    if !Storage.get("autofix").nil?
+      logger.info "skip running run_ruff_linter, due to autofix error"
+      TextMate.exit_discard
+    end
+    
+    all_errors = {}
+    
+    result, err = run_ruff("check")
+
+    unless err.empty?
+      lerr = "⚠️ possible configuration or parse error ⚠️\n\n#{err}"
+
+      if err.include?(TM_FILENAME)
+        regex = /^(\w+):\s+.*#{Regexp.escape(TM_FILENAME)}:(\d+):(\d+)/
+        matches = err.match(regex)
+        if matches
+          mark = matches[1]
+          line_number = matches[2]
+          set_marker(mark, line_number, err.chomp)
+        end
+      end
+      display_err(lerr)
+    end
+
+    extra_information = extract_ruff_errors(result, all_errors)
+    set_markers("error", all_errors)
+    error_report = generate_error_report(all_errors, extra_information)
+
+    logger.info "run_ruff_linter completed, will popup error_report"
+    display_err(error_report.join("\n")) if error_report
+  end
+  
+  def generate_error_report(all_errors, extra_information)
+    non_fixable_errors = []
+    fixable_errors = []
+    
+    all_errors.each do |line_number, errors|
+      errors.each do |error|
+        if error[:fixable]
+          fixable_errors << error
+        else
+          non_fixable_errors << error
+        end
+      end
+    end
+
+    non_fixable_error_count = non_fixable_errors.size
+    fixable_error_count = fixable_errors.size
+    error_report = []
+    
+    if all_errors.size == 0
+      error_report << "🎉 you have zero errors 👍"
+    else
+      error_report << "⚠️ found #{non_fixable_error_count+fixable_error_count} error(s) ⚠️"
+      error_report << ""
+      if non_fixable_error_count > 0
+        error_report << "[#{non_fixable_error_count}] non-fixable error(s)"
+        non_fixable_errors.each do |err|
+          error_report << "  - #{err[:message]} in line: #{err[:line_number]}"
+        end
+        error_report << ""
+      end
+      if fixable_error_count > 0
+        error_report << "[#{fixable_error_count}] fixable error(s)"
+        fixable_errors.each do |err|
+          error_report << "  - #{err[:message]} in line: #{err[:line_number]}"
+        end
+        error_report << ""
+      end
+    end
+    
+    error_report.concat(extra_information) if extra_information
+    return error_report
+  end
+  
+  def extract_ruff_errors(errors, all_errors)
+    extra_information = []
+
+    # skip first line, name of the file.
+    errors.split("\n")[1..-1].each do |line|
+      if line.start_with?(" ")
+        match = line.match(/(\d+):(\d+)\s+(\w+)\s+(\[\*\]\s+)?(.+)/)
+        if match
+          line_number = match[1].to_i
+          column = match[2].to_i
+          code = match[3]
+          fixable = !match[4].nil?
+          message = match[5].strip
+          
+          all_errors[line_number] = [] unless all_errors.has_key?(line_number)
+          all_errors[line_number] << {
+            :line_number => line_number,
+            :column => column,
+            :code => code,
+            :fixable => fixable,
+            :message => "[#{code}]: #{message}",
+            :type => "ruff",
+          }
+        end
+      else
+        extra_information << line unless line.include?("Found")
+      end
+    end
+
+    extra_information
   end
 end

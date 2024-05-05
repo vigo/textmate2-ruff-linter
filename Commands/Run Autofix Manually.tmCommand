@@ -8,26 +8,26 @@
 	<string>#!/usr/bin/env ruby18 -wKU
 require "#{ENV['TM_BUNDLE_SUPPORT']}/helper"
 
-Ruff.show_rules
+Ruff.auto_fix_errors(true)
 </string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>
 	<string>text</string>
 	<key>keyEquivalent</key>
-	<string>^R</string>
+	<string>^F</string>
 	<key>name</key>
-	<string>Show rules for existing errors</string>
+	<string>Run Autofix Manually</string>
 	<key>outputCaret</key>
-	<string>interpolateByLine</string>
+	<string>afterOutput</string>
 	<key>outputFormat</key>
 	<string>text</string>
 	<key>outputLocation</key>
-	<string>discard</string>
+	<string>replaceDocument</string>
 	<key>scope</key>
-	<string>source.python</string>
+	<string>source.python.ruff</string>
 	<key>uuid</key>
-	<string>7F9DF791-D14A-44AD-A580-75EA74F28895</string>
+	<string>D16E4203-64E5-46BF-B8B9-6B5AABA4795B</string>
 	<key>version</key>
 	<integer>2</integer>
 </dict>
