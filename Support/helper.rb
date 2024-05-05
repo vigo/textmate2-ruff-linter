@@ -22,6 +22,7 @@ module Configuration
   TM_PYRUFF_DISABLE = ENV["TM_PYRUFF_DISABLE"].nil?
   TM_PYRUFF_ENABLE_AUTOFIX = !ENV["TM_PYRUFF_ENABLE_AUTOFIX"].nil?
   TM_PYRUFF_OPTIONS = ENV["TM_PYRUFF_OPTIONS"]
+  TM_PYRUFF = ENV["TM_PYRUFF"]
 
   def self.logging_enabled?
     ENABLE_LOGGING
@@ -236,7 +237,7 @@ module Ruff
   end
   
   def setup_ok?
-    cmd = `command -v ruff`.chomp
+    cmd = TM_PYRUFF || `command -v ruff`.chomp
     if cmd.empty?
       logger.warn "ruff binary not found"
       return false, "ruff binary not found"

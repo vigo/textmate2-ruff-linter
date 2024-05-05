@@ -1,6 +1,8 @@
 ![Version](https://img.shields.io/badge/version-0.3.1-orange.svg?style=for-the-badge)
 ![TextMate](https://img.shields.io/badge/textmate-2.0.23-green.svg?style=for-the-badge)
 ![macOS](https://img.shields.io/badge/macos-ventura-yellow.svg?style=for-the-badge)
+![macOS](https://img.shields.io/badge/macos-sonoma-yellow.svg?style=for-the-badge)
+[![Ruff](https://img.shields.io/endpoint?style=for-the-badge&url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![Powered by Rake](https://img.shields.io/badge/powered_by-rake-blue?logo=ruby&style=for-the-badge)
 
 
@@ -9,37 +11,20 @@
 [Ruff][01] is an extremely fast Python linter, written in Rust. This is the
 TextMate bundle implementation of ruff linter. 
 
-Bundle calls ruff linter after save operation. Ruff has auto fix feature. If
-you set `TM_PYRUFF_ENABLE_AUTOFIX` TextMate environment variable, bundle
-applies auto fix first, than lints the code and pops up result!
-
-![Markers](screens/markers.gif)
-
-![Tool Tip Err](screens/tool-tip-err.png)
+demo.gif
 
 ---
 
 ## Installation
 
-You need to install `ruff`. I prefer `brew`. It’s also available via `pip`;
+You need to install `ruff`. I prefer `brew`. It’s also available via `pip`.
+Set the `TM_PYRUFF` variable to your `ruff` binary.
 
 ```bash
-$ brew install ruff
-$ cd ~/Library/Application\ Support/TextMate/Bundles/
-$ git clone https://github.com/vigo/textmate2-ruff-linter.git Python-Ruff-Linter.tmbundle
+brew install ruff
+cd "${HOME}/Library/Application\ Support/TextMate/Bundles/"
+git clone https://github.com/vigo/textmate2-ruff-linter.git Python-Ruff-Linter.tmbundle
 ```
-
-### TextMate Environment Variables
-
-| Variable | Description | Default Value |
-|:---------|:------------|---------------|
-| `TM_PYRUFF` | Path of executable; example: `/opt/homebrew/bin/ruff` | not set |
-| `TM_PYRUFF_ENABLE_AUTOFIX` | Enable automatically fix lint violations | `false` |
-| `TM_PYRUFF_TOOLTIP_LINE_LENGTH` | TextMate tool tip width in chars | `120` |
-| `TM_PYRUFF_TOOLTIP_BORDER_CHAR` | Top and bottom line’s char | `-` |
-| `TM_PYRUFF_TOOLTIP_LEFT_PADDING` | Padding value for lines to fit in tool tip window | `20` |
-| `TM_PYRUFF_DEBUG` | Enable debug mode | `false` |
-| `TM_PYRUFF_DISABLE` | Disable bundle | `false` |
 
 TextMate sometimes doesn’t apply environment variable creation from
 command-line. If this doesn’t work, you need to apply/set manually from
@@ -54,49 +39,82 @@ $ defaults write com.macromates.TextMate environmentVariables \
     -array-add "{enabled = 1; value = \"true\"; name = \"TM_PYRUFF_ENABLE_AUTOFIX\"; }"
 ```
 
+> **IMPORTANT**: Bundle ships with TextMate grammar: **Python Ruff**. You
+**must** set your language scope to **Python Ruff** for the bundle to
+function/work properly. Scope automatically loads `source.python` and 
+`source.python.django` grammars. Due to TextMate’s callback flow, I was forced 
+to create a separate scope. Otherwise, it would conflict with all bundles that 
+use `source.python`. Due to this situation, previous version was working too
+slow.
+
+---
+
+## Enable / Disable Bundle or Features
+
+To completely disable the bundle, simply assign a value to `TM_PYRUFF_DISABLE`. 
+This allows you to proceed as if the bundle does not exist. Additionally, if 
+the first line of your Python file contains comment **TM\_PYRUFF\_DISABLE**:
+
+```python
+# TM_PYRUFF_DISABLE
+print('ok')
+```
+
+---
+
+## TextMate Variables
+
+| Variable | Default Value | Description | 
+|:---------|:-----|:-----|
+| `ENABLE_LOGGING` |  | Set for development purposes |
+| `TOOLTIP_LINE_LENGTH` | `100` | Width of pop-up window |
+| `TOOLTIP_LEFT_PADDING` | `2` | Alignment value |
+| `TOOLTIP_BORDER_CHAR` | `-` | Border value |
+| `TM_PYRUFF` |  | Binary path of `ruff` |
+| `TM_PYRUFF_DISABLE` |  | Disable bundle |
+| `TM_PYRUFF_ENABLE_AUTOFIX` |  | Autofix fixables on save |
+| `TM_PYRUFF_OPTIONS` |  | Pass custom options if there is no config file |
+
+---
+
+## Hot Keys and Snippets
+
+| Hot Keys and TAB Completions |   | Description |
+|:-----|:-----|:-----|
+| <kbd>⌃</kbd> + <kbd>⇧</kbd> + <kbd>F</kbd> | <small>(control + shift + F)</small> | Trigger autofix manually |
+| <kbd>⌃</kbd> + <kbd>⇧</kbd> + <kbd>N</kbd> | <small>(control + shift + N)</small> | Add `# NOQA` to all problematic lines |
+| `disable` + <kbd>⇥</kbd> | <small>(type "disable<TAB>")</small> | Adds `# TM_PYRUFF_DISABLE` text |
+
+---
+
+## Bug Report
+
+Please set/enable the logger via setting `ENABLE_LOGGING=1`. Logs are written to
+the `/tmp/textmate-python-ruff.log` file. You can `tail` while running via;
+`tail -f /tmp/textmate-python-ruff.log` in another Terminal tab. You can see
+live what’s going on. Please provide the log information for bug reporting.
+
+After you fix the source code (next run) bundle removes those files if there
+is no error. According to you bug report, you can `tail` or copy/paste the
+contents of error file to issue.
+
+Also, while running bundle script (which is TextMate’s default ruby 1.8.7),
+if error occurs, TextMate pops up an alert window. Please add that screen shot
+or try to copy error text from modal dialog
+
 ---
 
 ## Change Log
 
-**2023-02-25**
+**2024-05-06**
 
-If you press <kbd>⌃</kbd> + <kbd>⇧</kbd> + <kbd>N</kbd> (control + shift + N) 
-you can run **NOQAlizer all**. This adds `# noqa:` directive to your all invalid
-rules:
+Mega refactoring, improved code structure and speed.
 
-```python
-print(f'hello')  # noqa: D100, T201, F541
-a = 1
-print(f"hello2")  # noqa: Q000, T201, F541
-b = 3
+- Remove `TM_PYRUFF_DEBUG` TextMate variable.
+- Add logging mechanism
+- Speed improvements, integrated and tested on `ruff` version `0.4.2`
 
-def foo(x, y):  # noqa: ANN001, ARG001, ANN201
-    '''aaaaaaaaaaaaaaaaaaaa'''  # noqa: D300, D403, D400, Q002, D415
-    print(bar)  # noqa: T201, F821
-
-```
-
-If you press <kbd>⌃</kbd> + <kbd>⇧</kbd> + <kbd>R</kbd> (control + shift + R) 
-you can display existing errors description in a new window! You can also run
-this from pull down menu: **Show rules for existing errors**
-
-You can disable bundle via setting an environment variable or adding a comment
-into first line of code:
-
-```python
-# TM_PYRUFF_DISABLE
-print(f'hello')
-a = 1
-print(f"hello2")
-b = 3
-
-def foo(x, y):
-    '''aaaaaaaaaaaaaaaaaaaa'''
-    print(bar)
-
-```
-
-You can easily turn on/off bundle w/o changing settings.
+You can read the whole story [here][changelog].
 
 ---
 
@@ -127,5 +145,15 @@ This project is licensed under MIT
 
 ---
 
-[01]: https://beta.ruff.rs/docs/
+[01]: https://docs.astral.sh/ruff/
+[changelog]: https://github.com/vigo/textmate2-ruff-linter/blob/main/CHANGELOG.md
 [coc]: https://github.com/vigo/textmate2-ruff-linter/blob/main/CODE_OF_CONDUCT.md
+
+
+
+
+
+
+
+
+
