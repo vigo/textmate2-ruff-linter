@@ -278,7 +278,7 @@ module Ruff
     end
 
     cmd_version = `#{cmd} --version`.chomp
-    logger.debug "cmd: #{cmd} | version: #{cmd_version} | args: #{args.join(" ")}"
+    logger.debug "subcmd: #{subcmd} | cmd: #{cmd} | version: #{cmd_version} | args: #{args.join(" ")}"
 
     case subcmd
     when "check","noqalize"
@@ -311,7 +311,7 @@ module Ruff
   
   # callback.document.will-save.50
   def auto_fix_errors(manual=false)
-    logger.info "running auto_fix_errors"
+    logger.info "running auto_fix_errors - callback.document.will-save"
     reset_markers
 
     TextMate.exit_discard unless bundle_enabled?
@@ -323,10 +323,18 @@ module Ruff
     ok, err = setup_ok?
     display_err(err) unless ok
     
-    result, _ = run_ruff("imports")
+    result, err = run_ruff("imports")
+    if err.include?("ruff failed")
+      display_err(err)
+    end
+    self.document = result
     
     if TM_PYRUFF_ENABLE_AUTOFIX || manual
-      result, _ = run_ruff("autofix")
+      result, err = run_ruff("autofix")
+      if err.include?("ruff failed")
+        display_err(err)
+      end
+      self.document = result
     end
     
     print document
@@ -334,7 +342,7 @@ module Ruff
   
   # callback.document.did-save.50
   def run_ruff_linter
-    logger.info "running run_ruff_linter"
+    logger.info "running run_ruff_linter - callback.document.did-save"
 
     TextMate.exit_discard unless bundle_enabled?
     read_stdin
@@ -374,27 +382,31 @@ module Ruff
         end
       end
     end
-
+    
+    # fixable_errors.sort_by!{ |err| person[:name] }
+    
     non_fixable_error_count = non_fixable_errors.size
     fixable_error_count = fixable_errors.size
     error_report = []
     
+    
+    
     if all_errors.size == 0
-      error_report << "🎉 you have zero errors 👍"
+      error_report << "🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍\n"
     else
       error_report << "⚠️ found #{non_fixable_error_count+fixable_error_count} error(s) ⚠️"
       error_report << ""
       if non_fixable_error_count > 0
         error_report << "[#{non_fixable_error_count}] non-fixable error(s)"
-        non_fixable_errors.each do |err|
-          error_report << "  - #{err[:message]} in line: #{err[:line_number]}"
+        non_fixable_errors.sort_by{|err| err[:line_number]}.each do |err|
+          error_report << "  - #{err[:line_number]} -> #{err[:message]}"
         end
         error_report << ""
       end
       if fixable_error_count > 0
         error_report << "[#{fixable_error_count}] fixable error(s)"
-        fixable_errors.each do |err|
-          error_report << "  - #{err[:message]} in line: #{err[:line_number]}"
+        fixable_errors.sort_by{|err| err[:line_number]}.each do |err|
+          error_report << "  - #{err[:line_number]} -> #{err[:message]}"
         end
         error_report << ""
       end
