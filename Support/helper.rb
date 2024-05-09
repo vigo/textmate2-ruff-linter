@@ -13,6 +13,7 @@ LOG_PROGNAME = "Python-RUFF"
 module Configuration
   TM_PROJECT_DIRECTORY = ENV["TM_PROJECT_DIRECTORY"]
   TM_FILENAME = ENV["TM_FILENAME"]
+  TM_DOCUMENT_UUID = ENV["TM_DOCUMENT_UUID"]
 
   TOOLTIP_LINE_LENGTH = ENV["TM_PYRUFF_TOOLTIP_LINE_LENGTH"] || "100"
   TOOLTIP_LEFT_PADDING = ENV["TM_PYRUFF_TOOLTIP_LEFT_PADDING"] || "2"
@@ -86,24 +87,24 @@ end
 
 module Storage
   def self.file_path(name)
-    "#{STORAGE_FILE_PREFIX}#{name}.error"
+    "#{STORAGE_FILE_PREFIX}#{name}-#{ENV["TM_DOCUMENT_UUID"]}.error"
   end
 
   def self.add(name, error_message)
     File.open(file_path(name), 'w') do |file|
-      file.puts error_message
+      file.puts error_message.join("\n")
     end
-    logger.info "storage - adding error for #{name}"
+    logger.info "storage - adding error for #{name} - #{ENV["TM_DOCUMENT_UUID"]}"
   end
 
   def self.get(name)
     path = file_path(name)
     if File.exist?(path)
-      logger.info "storage - error file exists for #{name}"
       File.open(path, 'r') do |file|
         return file.read
       end
     end
+    logger.warn "storage - get for #{name} doesn't exists - #{ENV["TM_DOCUMENT_UUID"]}"
     nil
   end
 
@@ -111,7 +112,8 @@ module Storage
     path = file_path(name)
     if File.exist?(path)
       File.delete(path)
-      logger.info "storage - destroyed error file for #{name}"
+    else
+      logger.warn "storage - destroy for #{name} doesn't exists - #{TM_DOCUMENT_UUID}"
     end
   end
   
@@ -149,16 +151,19 @@ module Ruff
   end
 
   def reset_markers
-    system(ENV["TM_MATE"], "--uuid", ENV["TM_DOCUMENT_UUID"], "--clear-mark=note",
-                                                              "--clear-mark=warning",
-                                                              "--clear-mark=error"
+    system(
+      ENV["TM_MATE"],
+      "--uuid", TM_DOCUMENT_UUID,
+      "--clear-mark=note",
+      "--clear-mark=warning",
+      "--clear-mark=error"
     )
   end
 
   def set_marker(mark, line, msg)
     unless line.nil?
       tm_args = [
-        '--uuid', ENV['TM_DOCUMENT_UUID'],
+        '--uuid', TM_DOCUMENT_UUID,
         '--line', "#{line}",
         '--set-mark', "#{mark}:#{msg}",
       ]
@@ -239,7 +244,7 @@ module Ruff
   def setup_ok?
     cmd = TM_PYRUFF || `command -v ruff`.chomp
     if cmd.empty?
-      logger.warn "ruff binary not found"
+      # logger.warn "ruff binary not found"
       return false, "ruff binary not found"
     end
     $CMD = cmd
@@ -255,13 +260,13 @@ module Ruff
   
   def run_ruff(subcmd)
     cmd = $CMD
-    logger.info "cmd: #{cmd}"
+    # logger.info "cmd: #{cmd}"
 
     args = ["--output-format", "grouped"]
     
     if TM_PYRUFF_OPTIONS && any_config_file_exist?
       opts = TM_PYRUFF_OPTIONS.split(" ")
-      logger.debug "we have options: #{TM_PYRUFF_OPTIONS}"
+      # logger.debug "we have options: #{TM_PYRUFF_OPTIONS}"
       args.concat(opts)
     end
     
@@ -275,24 +280,26 @@ module Ruff
       args = ["check", "--select", "I", "--fix", "-"]
     when "noqalize"
       args = ["check", "--add-noqa"]
+    when "format"
+      args = ["format", "-"]
     end
 
     cmd_version = `#{cmd} --version`.chomp
-    logger.debug "subcmd: #{subcmd} | cmd: #{cmd} | version: #{cmd_version} | args: #{args.join(" ")}"
+    # logger.debug "subcmd: #{subcmd} | cmd: #{cmd} | version: #{cmd_version} | args: #{args.join(" ")}"
 
     case subcmd
     when "check","noqalize"
       result, err = TextMate::Process.run(cmd, args, ENV['TM_FILEPATH'])
-    when "autofix", "imports"
+    when "autofix", "imports", "format"
       result, err = TextMate::Process.run(cmd, args, :input => document)
     end
 
-    logger.error "run_ruff run error on [#{subcmd}]: #{err}" unless err.empty?
+    # logger.error "run_ruff run error on [#{subcmd}]: #{err}" unless err.empty?
     return result, err
   end
   
   def noqalize_all
-    logger.info "running noqalize_all"
+    # logger.info "running noqalize_all"
     reset_markers
 
     TextMate.exit_discard unless bundle_enabled?
@@ -305,14 +312,15 @@ module Ruff
     display_err(err) unless ok
 
     result, err = run_ruff("noqalize")
-    logger.info "noqalize_all error: #{err}"
+    # logger.info "noqalize_all error: #{err}"
     display_err(err)
   end
   
   # callback.document.will-save.50
   def auto_fix_errors(manual=false)
-    logger.info "running auto_fix_errors - callback.document.will-save"
+    logger.info "callback.document.will-save - running auto_fix_errors for #{TM_DOCUMENT_UUID}"
     reset_markers
+    Storage.destroy("goto") # delete errors
 
     TextMate.exit_discard unless bundle_enabled?
     read_stdin
@@ -325,6 +333,12 @@ module Ruff
     
     result, err = run_ruff("imports")
     if err.include?("ruff failed")
+      display_err(err)
+    end
+    self.document = result
+
+    result, err = run_ruff("format")
+    if err.include?("Failed")
       display_err(err)
     end
     self.document = result
@@ -342,7 +356,7 @@ module Ruff
   
   # callback.document.did-save.50
   def run_ruff_linter
-    logger.info "running run_ruff_linter - callback.document.did-save"
+    logger.info "callback.document.did-save - running run_ruff_linter for #{TM_DOCUMENT_UUID}"
 
     TextMate.exit_discard unless bundle_enabled?
     read_stdin
@@ -365,7 +379,7 @@ module Ruff
     set_markers("error", all_errors)
     error_report = generate_error_report(all_errors, extra_information)
 
-    logger.info "run_ruff_linter completed, will popup error_report"
+    # logger.info "run_ruff_linter completed, will popup error_report"
     display_err(error_report.join("\n")) if error_report
   end
   
@@ -383,13 +397,10 @@ module Ruff
       end
     end
     
-    # fixable_errors.sort_by!{ |err| person[:name] }
-    
     non_fixable_error_count = non_fixable_errors.size
     fixable_error_count = fixable_errors.size
     error_report = []
-    
-    
+    go_to_errors = []
     
     if all_errors.size == 0
       error_report << "🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍\n"
@@ -400,6 +411,7 @@ module Ruff
         error_report << "[#{non_fixable_error_count}] non-fixable error(s)"
         non_fixable_errors.sort_by{|err| err[:line_number]}.each do |err|
           error_report << "  - #{err[:line_number]} -> #{err[:message]}"
+          go_to_errors << "#{err[:line_number]} | #{err[:message]}"
         end
         error_report << ""
       end
@@ -407,19 +419,21 @@ module Ruff
         error_report << "[#{fixable_error_count}] fixable error(s)"
         fixable_errors.sort_by{|err| err[:line_number]}.each do |err|
           error_report << "  - #{err[:line_number]} -> #{err[:message]}"
+          go_to_errors << "#{err[:line_number]} | #{err[:message]}"
         end
         error_report << ""
       end
     end
     
     error_report.concat(extra_information) if extra_information
+    Storage.add("goto", go_to_errors) if go_to_errors
     return error_report
   end
   
   def extract_ruff_errors(errors, all_errors, other_errors)
     extra_information = []
     
-    logger.error "other_errors: #{other_errors}"
+    # logger.error "other_errors: #{other_errors}"
     
     unless other_errors.empty?
       dlm = "-" * TOOLTIP_LINE_LENGTH.to_i
