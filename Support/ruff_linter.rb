@@ -86,7 +86,8 @@ module RuffLinter
     
     logger.info "running run_document_did_save"
     
-    Linter.check(:cmd => TM_PYRUFF)
+    Linter.check(:cmd => TM_PYRUFF, 
+                 :document_line_count => document.split("\n").size)
   end
 
   def noqalize_all

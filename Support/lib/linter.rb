@@ -128,6 +128,7 @@ module Linter
   def check(options={})
     cmd = options[:cmd]
     args = ["check", "--output-format", "grouped"]
+    document_line_count = options[:document_line_count]
 
     unless TM_PYRUFF_OPTIONS.nil?
       ruff_options = TM_PYRUFF_OPTIONS.split(" ")
@@ -143,7 +144,7 @@ module Linter
 
     result = parse_out(out)
     Helpers.set_markers("error", result[:mark_errors])
-    display_result(result)
+    display_result(result, document_line_count)
   end
   
   def pad_number(lines_count, line_number)
@@ -152,7 +153,7 @@ module Linter
     return sprintf("%0#{padding}d", line_number)
   end
   
-  def display_result(result)
+  def display_result(result, line_count)
     Helpers.exit_boxify_tool_tip("🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍") if result[:mark_errors].size == 0
     
     Storage.destroy(true)
@@ -171,8 +172,8 @@ module Linter
       output << "[#{default_errors_count}] default #{Helpers.pluralize(default_errors_count, "error")}:"
       result[:default_errors].sort_by{|err| err[:line_number]}.each do |err|
         output << "  - #{err[:line_number]} -> #{err[:message]}"
-        fmt_ln = pad_number(default_errors_count, err[:line_number])
-        fmt_cn = pad_number(default_errors_count, err[:column_number])
+        fmt_ln = pad_number(line_count, err[:line_number])
+        fmt_cn = pad_number(line_count, err[:column_number])
         go_to_errors << "#{fmt_ln}:#{fmt_cn} | #{err[:message]}"
       end
     end
@@ -183,8 +184,8 @@ module Linter
       output << "[#{fixable_errors_count}] fixable #{Helpers.pluralize(fixable_errors_count, "error")}:"
       result[:fixable_errors].sort_by{|err| err[:line_number]}.each do |err|
         output << "  - #{err[:line_number]} -> #{err[:message]}"
-        fmt_ln = pad_number(fixable_errors_count, err[:line_number])
-        fmt_cn = pad_number(fixable_errors_count, err[:column_number])
+        fmt_ln = pad_number(line_count, err[:line_number])
+        fmt_cn = pad_number(line_count, err[:column_number])
         go_to_errors << "#{fmt_ln}:#{fmt_cn} | #{err[:message]}"
       end
     end
