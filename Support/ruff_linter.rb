@@ -45,13 +45,16 @@ module RuffLinter
   end
   
   def run_document_will_save(options={})
-    logger.info "bundle can_run?: #{can_run?}"
-    logger.info "bundle enabled?: #{enabled?}"
-
     Helpers.reset_markers
     Storage.destroy
 
-    Helpers.alert :title => "Warning", :message => "You need to install ruff to continue!" unless can_run?
+    unless can_run?
+      logger.fatal "ruff required"
+      errors = ["Warning", "You need to install ruff to continue!"]
+      Storage.add(errors)
+      Helpers.exit_boxify_tool_tip(errors.join("\n"))
+    end
+
     Helpers.exit_discard unless enabled?
     
     read_stdin
@@ -59,16 +62,26 @@ module RuffLinter
     Helpers.exit_discard if document_empty?
     Helpers.exit_discard if document_has_first_line_comment?
     
-    out = Linter.sort_imports(:cmd => TM_PYRUFF, :input => document)
-    document = out
+    errors_sort_imports = nil
+    errors_format_code = nil
 
-    out = Linter.format_code(:cmd => TM_PYRUFF, :input => document)
+    out, errors_sort_imports = Linter.sort_imports(:cmd => TM_PYRUFF, :input => document)
     document = out
     
-    if options[:autofix] || TM_PYRUFF_ENABLE_AUTOFIX
-      logger.info "autofix enabled"
-      out = Linter.autofix(:cmd => TM_PYRUFF, :input => document)
+    if errors_sort_imports.nil?
+      out, errors_format_code = Linter.format_code(:cmd => TM_PYRUFF, :input => document)
       document = out
+    else
+      logger.error "errors_sort_imports: #{errors_sort_imports.inspect}"
+    end
+    
+    if errors_format_code.nil?
+      if options[:autofix] || TM_PYRUFF_ENABLE_AUTOFIX
+        out = Linter.autofix(:cmd => TM_PYRUFF, :input => document)
+        document = out
+      else
+        logger.error "errors_format_code: #{errors_format_code.inspect}"
+      end
     end
     
     print document
@@ -82,22 +95,25 @@ module RuffLinter
     
     Helpers.exit_discard if document_empty?
     Helpers.exit_discard if document_has_first_line_comment?
-    Helpers.exit_discard if Storage.get
-    
-    logger.info "running run_document_did_save"
+
+    storage_err = Storage.get
+    if storage_err
+      logger.error "storage_err: #{storage_err.inspect}"
+      Helpers.exit_boxify_tool_tip(storage_err)
+    end
     
     Linter.check(:cmd => TM_PYRUFF, 
                  :document_line_count => document.split("\n").size)
   end
 
   def noqalize_all
-    logger.info "bundle can_run?: #{can_run?}"
-    logger.info "bundle enabled?: #{enabled?}"
-
     Helpers.reset_markers
     Storage.destroy
 
-    Helpers.alert :title => "Warning", :message => "You need to install ruff to continue!" unless can_run?
+    unless can_run?
+      logger.fatal "ruff required"
+      Helpers.exit_boxify_tool_tip("Warning\nYou need to install ruff to continue!")
+    end
     Helpers.exit_discard unless enabled?
     
     read_stdin

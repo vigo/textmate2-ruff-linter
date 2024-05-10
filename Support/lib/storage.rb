@@ -10,7 +10,7 @@ module Storage
   def self.add(errors, goto=false)
     filename = ERROR_FILE
     filename = GOTO_FILE if goto
-    File.open(filename, 'w') do |file|
+    File.open(filename, 'a') do |file|
       file.puts errors.join("\n")
     end
     logger.info "storage.add for #{TM_DOCUMENT_UUID} (#{filename})"

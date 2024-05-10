@@ -1,4 +1,3 @@
-require ENV['TM_SUPPORT_PATH'] + '/lib/ui'
 require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
 
 module Helpers
@@ -22,18 +21,6 @@ module Helpers
     system(ENV["TM_MATE"], "--uuid", TM_DOCUMENT_UUID, "--line", line)
   end
   
-  def alert(options={})
-    style = options[:style] || :critical
-    title = options[:title] || "Title"
-    message = options[:message] || "Message"
-    button = options[:button] || "Ok"
-    line = options[:line] || nil
-
-    _ = TextMate::UI.alert(style, title, message, button)
-    goto line unless line.nil?
-    exit_discard
-  end
-
   def reset_markers
     system(
       ENV["TM_MATE"],

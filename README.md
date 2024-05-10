@@ -49,6 +49,13 @@ you can use the `.tm_properties` file under anywhere in your project root:
     TM_PYRUFF=/path/to/bin/ruff
     TM_PYRUFF_ENABLE_AUTOFIX=1   # if you want to enable autofix by default
 
+For older users like myself, you can define the tooltip to make it easier to
+read:
+
+```bash
+defaults write com.macromates.TextMate NSToolTipsFontSize 24
+```
+
 ---
 
 ## Usage
@@ -113,8 +120,11 @@ If you want to enable autofix set `TM_PYRUFF_ENABLE_AUTOFIX` variable (any value
 | <kbd>⌥</kbd> + <kbd>F</kbd> | <small>(option + F)</small> | Trigger autofix manually |
 | <kbd>⌥</kbd> + <kbd>A</kbd> | <small>(option + A)</small> | Add `# NOQA` to all problematic lines |
 | <kbd>⌥</kbd> + <kbd>G</kbd> | <small>(option + G)</small> | Go to error marked line/column |
+| <kbd>⌥</kbd> + <kbd>T</kbd> | <small>(option + T)</small> | `tm_properties` helper |
+| <kbd>⌥</kbd> + <kbd>T</kbd> | <small>(option + T)</small> | `.ruff.toml` config helper |
 | `disable` + <kbd>⇥</kbd> | <small>(type "disable<TAB>")</small> | Adds `# TM_PYRUFF_DISABLE` text |
 | `noq` + <kbd>⇥</kbd> | <small>(type "noq<TAB>")</small> | Some noqa options |
+| `envi` + <kbd>⇥</kbd> | <small>(type "envi<TAB>")</small> | Insert environment variables, works in `tm_properties` |
 
 ![Demo 2](screens/ruff-demo-02.gif)
 
@@ -133,7 +143,23 @@ contents of error file to issue.
 
 Also, while running bundle script (*which is TextMate’s default ruby 1.8.7*),
 if error occurs, TextMate pops up an alert window. Please add that screen shot
-or try to copy error text from modal dialog
+or try to copy error text from modal dialog.
+
+Logger output should look like this:
+
+    [2024-05-11 00:49:07][Python-RUFF][WARN][storage.rb->destroy]: storage.destroy not found for 097AA1A0-89C7-4686-A3BC-F0585962E974 - (/tmp/textmate-ruff-097AA1A0-89C7-4686-A3BC-F0585962E974.error)
+    [2024-05-11 00:49:07][Python-RUFF][INFO][storage.rb->destroy]: storage.destroy for 097AA1A0-89C7-4686-A3BC-F0585962E974 - (/tmp/textmate-ruff-097AA1A0-89C7-4686-A3BC-F0585962E974.goto)
+    [2024-05-11 00:49:07][Python-RUFF][DEBUG][linter.rb->run]: cmd: /opt/homebrew/bin/ruff | nil input: true | args: ["check", "--add-noqa"]
+    [2024-05-11 00:49:07][Python-RUFF][WARN][linter.rb->noqalize]: err: "Added 5 noqa directives.\n"
+    [2024-05-11 00:49:15][Python-RUFF][WARN][storage.rb->destroy]: storage.destroy not found for 097AA1A0-89C7-4686-A3BC-F0585962E974 - (/tmp/textmate-ruff-097AA1A0-89C7-4686-A3BC-F0585962E974.error)
+    [2024-05-11 00:49:15][Python-RUFF][DEBUG][linter.rb->run]: cmd: /opt/homebrew/bin/ruff | nil input: false | args: ["check", "--select", "I", "--fix", "-"]
+    [2024-05-11 00:49:15][Python-RUFF][DEBUG][linter.rb->run]: cmd: /opt/homebrew/bin/ruff | nil input: false | args: ["format", "-"]
+    [2024-05-11 00:49:15][Python-RUFF][ERROR][ruff_linter.rb->run_document_will_save]: errors_format_code: nil
+    [2024-05-11 00:49:15][Python-RUFF][WARN][storage.rb->get]: storage.get not found for 097AA1A0-89C7-4686-A3BC-F0585962E974 (/tmp/textmate-ruff-097AA1A0-89C7-4686-A3BC-F0585962E974.error)
+    [2024-05-11 00:49:15][Python-RUFF][DEBUG][linter.rb->run]: cmd: /opt/homebrew/bin/ruff | nil input: true | args: ["check", "--output-format", "grouped"]
+
+Keep in mind that when logging is enabled, there may be some performance
+degradation due to *file I/O* operations.
 
 ---
 
@@ -155,6 +181,18 @@ reports**, and **feature requests**.
 ---
 
 ## Change Log
+
+**2024-05-11**
+
+Small updates, fixes
+
+- Remove `TextMate::UI.tooltip` due to TextMate memory leaks/crashes and M-CPU
+  problems. Return back to  basic/safe tool tip.
+- Improve error handling
+- Improve logging
+- Add extra snippets
+- Add `tm_properties` helpers
+- Add `.ruff.toml` config helper
 
 **2024-05-10**
 
