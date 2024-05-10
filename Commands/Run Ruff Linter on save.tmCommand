@@ -6,10 +6,10 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18 -wKU
-require "#{ENV['TM_BUNDLE_SUPPORT']}/helper"
 
-Ruff.run_ruff_linter
-</string>
+require ENV["TM_BUNDLE_SUPPORT"] + "/ruff_linter"
+
+RuffLinter.run_document_did_save</string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>

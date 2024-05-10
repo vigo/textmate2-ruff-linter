@@ -13,7 +13,7 @@ require ENV['TM_SUPPORT_PATH'] + '/lib/ui'
 
 TM_DOCUMENT_UUID = ENV["TM_DOCUMENT_UUID"]
 
-filename = "/tmp/textmate-python-ruff-goto-#{TM_DOCUMENT_UUID}.error"
+filename = "/tmp/textmate-ruff-#{TM_DOCUMENT_UUID}.goto"
 if File.exist?(filename)
   errors = File.read(filename)
 
@@ -37,7 +37,7 @@ end
 	<key>inputFormat</key>
 	<string>text</string>
 	<key>keyEquivalent</key>
-	<string>~@g</string>
+	<string>~g</string>
 	<key>name</key>
 	<string>Go to error line</string>
 	<key>outputCaret</key>

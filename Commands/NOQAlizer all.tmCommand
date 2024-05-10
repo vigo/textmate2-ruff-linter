@@ -6,16 +6,17 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18 -wKU
-require "#{ENV['TM_BUNDLE_SUPPORT']}/helper"
 
-Ruff.noqalize_all
+require ENV["TM_BUNDLE_SUPPORT"] + "/ruff_linter"
+
+RuffLinter.noqalize_all
 </string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>
 	<string>text</string>
 	<key>keyEquivalent</key>
-	<string>^N</string>
+	<string>~a</string>
 	<key>name</key>
 	<string>NOQAlizer all</string>
 	<key>outputCaret</key>
