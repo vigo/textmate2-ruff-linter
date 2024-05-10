@@ -104,8 +104,7 @@ module RuffLinter
     Helpers.exit_discard if document_empty?
     Helpers.exit_discard if document_has_first_line_comment?
     
-    logger.info "aaaaaaaaaa"
-    
+    Storage.destroy(true)
     Linter.noqalize(:cmd => TM_PYRUFF)
   end
 end

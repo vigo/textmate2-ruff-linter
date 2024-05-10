@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>content</key>
-	<string> # noqa</string>
+	<string># noqa</string>
 	<key>name</key>
 	<string>Insert noqa</string>
 	<key>scope</key>

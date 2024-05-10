@@ -9,25 +9,14 @@ module Linter
 
   module_function
   
-  def run(options={})
-    cmd = options[:cmd]
-    input = options[:input]
-    args = options[:args]
-    
-    logger.info "cmd: #{cmd}"
-    logger.info "has input nil? #{input.nil?}"
-    logger.info "args #{args.inspect}"
-    
-    if input.nil?
-      return TextMate::Process.run(cmd, args, TM_FILEPATH)
-    else
-      return TextMate::Process.run(cmd, args, :input => input)
-    end
-  end
-  
   def check_errors(err)
     return if err.nil?
     return if err.empty?
+
+    if err.start_with?("ruff failed")
+      Storage.add(err.split("\n"))
+      Helpers.alert :title => "Error", :message => err
+    end
 
     if err.start_with?("error:")
       errors = err.split("\n")
@@ -53,17 +42,29 @@ module Linter
       Helpers.alert :title => "Warning", :message => err
     end
   end
+
+  def run(options={})
+    cmd = options[:cmd]
+    input = options[:input]
+    args = options[:args]
+
+    if input.nil?
+      return TextMate::Process.run(cmd, args, TM_FILEPATH)
+    else
+      return TextMate::Process.run(cmd, args, :input => input)
+    end
+  end
   
   def sort_imports(options={})
     cmd = options[:cmd]
     input = options[:input]
-    out, err = run :cmd => cmd,
-                   :input => input,
-                   :args => ["check", "--select", "I", "--fix", "-"]
-    
-    # logger.debug "sort_imports - out:\n#{out}"
-    logger.debug "sort_imports - err: #{err.inspect} - nil? #{err.nil?}"
+    args = ["check", "--select", "I", "--fix", "-"]
 
+    logger.debug "sort_imports | args: #{args.inspect}"
+    
+    out, err = run :cmd => cmd, :input => input, :args => args
+    
+    logger.debug "sort_imports - err: #{err.inspect} - nil? #{err.nil?}"
     check_errors(err)
     logger.info "sort_imports - returned from check_errors"
     return out
@@ -72,13 +73,15 @@ module Linter
   def format_code(options={})
     cmd = options[:cmd]
     input = options[:input]
+    args = ["format", "-"]
+    
+    logger.debug "format_code | args: #{args.inspect}"
+
     out, err = run :cmd => cmd,
                    :input => input,
-                   :args => ["format", "-"]
+                   :args => args
     
-    # logger.debug "format_code - out:\n#{out}"
     logger.debug "format_code - err: #{err.inspect} - nil? #{err.nil?}"
-
     check_errors(err)
     logger.info "format_code - returned from check_errors"
     return out
@@ -87,20 +90,22 @@ module Linter
   def autofix(options={})
     cmd = options[:cmd]
     input = options[:input]
-    autofix_args = [
+
+    args = [
       "check",
       "--fix",
       "--output-format", "grouped",
       "--stdin-filename", TM_FILENAME,
       "-",
     ]
+
+    logger.debug "autofix | args: #{args.inspect}"
+
     out, err = run :cmd => cmd,
                    :input => input,
-                   :args => autofix_args
+                   :args => args
 
-   # logger.debug "autofix - out:\n#{out}"
    logger.debug "autofix - err: #{err.inspect} - nil? #{err.nil?}"
-
    check_errors(err)
    logger.info "autofix - returned from check_errors"
    return out
@@ -110,12 +115,13 @@ module Linter
     cmd = options[:cmd]
     args = ["check", "--add-noqa"]
 
-    logger.debug "noqalize - args: #{args.inspect}"
+    logger.debug "noqalize | args: #{args.inspect}"
 
     out, err = run :cmd => cmd, :args => args
 
-    logger.debug "noqalize - out:\n#{out}"
+    logger.debug "noqalize - out: #{out}, empty? #{out.empty?}"
     logger.debug "noqalize - err: #{err.inspect} - nil? #{err.nil?}"
+
     Helpers.exit_boxify_tool_tip("🎉 #{err.chomp} 👍") if out.empty?
   end
   
@@ -126,20 +132,24 @@ module Linter
     unless TM_PYRUFF_OPTIONS.nil?
       ruff_options = TM_PYRUFF_OPTIONS.split(" ")
       args.concat(ruff_options)
-      logger.debug "ruff_options: #{ruff_options.inspect}"
+      logger.debug "check - ruff_options: #{ruff_options.inspect}"
     end
-
-    logger.debug "check - args: #{args.inspect}"
+    
+    logger.debug "check | args: #{args.inspect}"
 
     out, err = run :cmd => cmd, :args => args
 
-    logger.debug "check - out:\n#{out}"
     logger.debug "check - err: #{err.inspect} - nil? #{err.nil?}"
-    
+
     result = parse_out(out)
-    
     Helpers.set_markers("error", result[:mark_errors])
     display_result(result)
+  end
+  
+  def pad_number(lines_count, line_number)
+    padding = lines_count.to_s.length
+    padding = 2 if lines_count < 10
+    return sprintf("%0#{padding}d", line_number)
   end
   
   def display_result(result)
@@ -161,7 +171,9 @@ module Linter
       output << "[#{default_errors_count}] default #{Helpers.pluralize(default_errors_count, "error")}:"
       result[:default_errors].sort_by{|err| err[:line_number]}.each do |err|
         output << "  - #{err[:line_number]} -> #{err[:message]}"
-        go_to_errors << "#{err[:line_number]} | #{err[:message]}"
+        fmt_ln = pad_number(default_errors_count, err[:line_number])
+        fmt_cn = pad_number(default_errors_count, err[:column_number])
+        go_to_errors << "#{fmt_ln}:#{fmt_cn} | #{err[:message]}"
       end
     end
 
@@ -171,7 +183,9 @@ module Linter
       output << "[#{fixable_errors_count}] fixable #{Helpers.pluralize(fixable_errors_count, "error")}:"
       result[:fixable_errors].sort_by{|err| err[:line_number]}.each do |err|
         output << "  - #{err[:line_number]} -> #{err[:message]}"
-        go_to_errors << "#{err[:line_number]} | #{err[:message]}"
+        fmt_ln = pad_number(fixable_errors_count, err[:line_number])
+        fmt_cn = pad_number(fixable_errors_count, err[:column_number])
+        go_to_errors << "#{fmt_ln}:#{fmt_cn} | #{err[:message]}"
       end
     end
     
@@ -230,10 +244,5 @@ module Linter
       :fixable_errors => fixable_errors,
       :extras => extras,
     }
-    # logger.debug mark_errors.inspect
-    # logger.debug default_errors.inspect
-    # logger.debug fixable_errors.inspect
-    # logger.debug extras.inspect
-    
   end
 end
