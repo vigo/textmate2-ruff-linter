@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env ruby18 -wKU
+
+FILE_TEMPLATE = %{line-length = 119 # Django :)
+
+[format]
+quote-style = "single"
+
+[lint]
+ignore = [
+    "ANN",
+    "D",
+    "SIM105",
+    "PGH004",
+    "PTH",
+    "ERA001",
+    "ISC001",
+    "COM812",
+]
+select = ["ALL"] 
+
+[lint.flake8-quotes]
+inline-quotes = "single"
+docstring-quotes = "double"
+}
+
+CONFIG_FILE_NAME = ".ruff.toml"
+TARGET_FILE = "#{ENV['TM_PROJECT_DIRECTORY']}/#{CONFIG_FILE_NAME}"
+
+unless File.exists? TARGET_FILE
+  f = File.open(TARGET_FILE, "w")
+  f.puts(FILE_TEMPLATE)
+  f.close
+
+  puts "  #{CONFIG_FILE_NAME} created at: \n\n"
+  puts "  #{TARGET_FILE}"
+else
+  puts "  #{CONFIG_FILE_NAME} already exists!\n\n"
+  puts "  Please remove file first!"
+end
+</string>
+	<key>input</key>
+	<string>none</string>
+	<key>inputFormat</key>
+	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>~t</string>
+	<key>name</key>
+	<string>Create ruff.toml</string>
+	<key>outputCaret</key>
+	<string>heuristic</string>
+	<key>outputFormat</key>
+	<string>text</string>
+	<key>outputLocation</key>
+	<string>toolTip</string>
+	<key>uuid</key>
+	<string>4D8A7310-4ACB-434D-A237-6CF5235E07F4</string>
+	<key>version</key>
+	<integer>2</integer>
+</dict>
+</plist>

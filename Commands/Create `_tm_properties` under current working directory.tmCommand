@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>command</key>
+	<string>#!/usr/bin/env ruby18 -wKU
+
+TM_PROPERTIES_TEMPLATE = %{# TM_PYRUFF="/path/to/ruff"
+# TM_PYRUFF_ENABLE_AUTOFIX=1
+# TM_PYRUFF_DISABLE=1
+# TM_PYRUFF_OPTIONS=""
+# ENABLE_LOGGING=1
+}
+
+TM_PROPERTY_FILE = "#{ENV['PWD']}/.tm_properties"
+
+unless File.exists? TM_PROPERTY_FILE
+  f = File.open(TM_PROPERTY_FILE, "w")
+  f.puts(TM_PROPERTIES_TEMPLATE)
+  f.close
+
+  puts "  `.tm_properties` file created at: \n\n"
+  puts "  #{TM_PROPERTY_FILE}"
+else
+  puts "  #{TM_PROPERTY_FILE} already exists!\n\n"
+  puts "  Please remove file first!"
+end
+</string>
+	<key>input</key>
+	<string>none</string>
+	<key>keyEquivalent</key>
+	<string>~t</string>
+	<key>name</key>
+	<string>Create `.tm_properties` under current working directory</string>
+	<key>outputCaret</key>
+	<string>heuristic</string>
+	<key>outputLocation</key>
+	<string>toolTip</string>
+	<key>uuid</key>
+	<string>8BD3B1A7-E10B-4FF8-8FDF-D811E91884EE</string>
+</dict>
+</plist>

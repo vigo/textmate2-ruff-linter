@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>${1|TM_PYRUFF=,TM_PYRUFF_ENABLE_AUTOFIX=1,ENABLE_LOGGING=1,TM_PYRUFF_DISABLE=1,TM_PYRUFF_OPTIONS=""|}</string>
+	<key>name</key>
+	<string>Insert environment variable</string>
+	<key>scope</key>
+	<string>source.tm-properties</string>
+	<key>tabTrigger</key>
+	<string>envi</string>
+	<key>uuid</key>
+	<string>5B62783B-988E-4AE0-A7D6-E8F5419F0A4A</string>
+</dict>
+</plist>

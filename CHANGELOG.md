@@ -1,5 +1,17 @@
 # Change Log
 
+**2024-05-11**
+
+Small updates, fixes
+
+- Remove `TextMate::UI.tooltip` due to TextMate memory leaks/crashes and M-CPU
+  problems. Return back to  basic/safe tool tip.
+- Improve error handling
+- Improve logging
+- Add extra snippets
+- Add `tm_properties` helpers
+- Add `.ruff.toml` config helper
+
 **2024-05-10**
 
 Giga refactoring, improved code, structure and features.
