@@ -6,16 +6,16 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18 -wKU
-require "#{ENV['TM_BUNDLE_SUPPORT']}/helper"
 
-Ruff.auto_fix_errors
-</string>
+require ENV["TM_BUNDLE_SUPPORT"] + "/ruff_linter"
+
+RuffLinter.run_document_will_save</string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>
 	<string>text</string>
 	<key>name</key>
-	<string>Auto fix errors</string>
+	<string>Document Will Save</string>
 	<key>outputCaret</key>
 	<string>interpolateByLine</string>
 	<key>outputFormat</key>
@@ -23,9 +23,9 @@ Ruff.auto_fix_errors
 	<key>outputLocation</key>
 	<string>replaceDocument</string>
 	<key>scope</key>
-	<string>source.python</string>
+	<string>source.python.ruff</string>
 	<key>semanticClass</key>
-	<string>callback.document.will-save.1</string>
+	<string>callback.document.will-save.50</string>
 	<key>uuid</key>
 	<string>F2DC6971-9B06-4593-9EC6-D467AADB43AF</string>
 	<key>version</key>

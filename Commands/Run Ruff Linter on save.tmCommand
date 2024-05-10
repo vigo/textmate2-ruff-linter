@@ -6,16 +6,16 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18 -wKU
-require "#{ENV['TM_BUNDLE_SUPPORT']}/helper"
 
-Ruff.run_ruff_linter
-</string>
+require ENV["TM_BUNDLE_SUPPORT"] + "/ruff_linter"
+
+RuffLinter.run_document_did_save</string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>
 	<string>text</string>
 	<key>name</key>
-	<string>Run Ruff Linter on save</string>
+	<string>Document Did Save</string>
 	<key>outputCaret</key>
 	<string>interpolateByLine</string>
 	<key>outputFormat</key>
@@ -23,9 +23,9 @@ Ruff.run_ruff_linter
 	<key>outputLocation</key>
 	<string>discard</string>
 	<key>scope</key>
-	<string>source.python</string>
+	<string>source.python.ruff</string>
 	<key>semanticClass</key>
-	<string>callback.document.did-save.1</string>
+	<string>callback.document.did-save.50</string>
 	<key>uuid</key>
 	<string>9DB6C68B-B678-40FA-962B-799733FCA199</string>
 	<key>version</key>
