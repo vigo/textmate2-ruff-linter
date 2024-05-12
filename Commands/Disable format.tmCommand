@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env ruby18 -wKU
+
+require ENV["TM_BUNDLE_SUPPORT"] + "/toggle_format"
+
+RuffLinter.toggle_format</string>
+	<key>input</key>
+	<string>selection</string>
+	<key>inputFormat</key>
+	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>~d</string>
+	<key>name</key>
+	<string>Disable format</string>
+	<key>outputCaret</key>
+	<string>afterOutput</string>
+	<key>outputFormat</key>
+	<string>snippet</string>
+	<key>outputLocation</key>
+	<string>replaceInput</string>
+	<key>scope</key>
+	<string>source.python.ruff</string>
+	<key>uuid</key>
+	<string>DD22FE90-953D-44D2-A654-D7A8DEB22905</string>
+	<key>version</key>
+	<integer>2</integer>
+</dict>
+</plist>
