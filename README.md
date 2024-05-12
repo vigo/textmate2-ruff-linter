@@ -139,6 +139,7 @@ Keep in mind, `TM_PYRUFF_OPTIONS` passed on `format` and `check` operations.
 | <kbd>⌥</kbd> + <kbd>G</kbd> | <small>(option + G)</small> | Go to error marked line/column |
 | <kbd>⌥</kbd> + <kbd>T</kbd> | <small>(option + T)</small> | `tm_properties` helper |
 | <kbd>⌥</kbd> + <kbd>T</kbd> | <small>(option + T)</small> | `.ruff.toml` config helper |
+| <kbd>⌥</kbd> + <kbd>D</kbd> | <small>(option + D)</small> | Enable / Disable format for selected lines |
 | `disable` + <kbd>⇥</kbd> | <small>(type "disable<TAB>")</small> | Adds `# TM_PYRUFF_DISABLE` text |
 | `noq` + <kbd>⇥</kbd> | <small>(type "noq<TAB>")</small> | Some noqa options |
 | `envi` + <kbd>⇥</kbd> | <small>(type "envi<TAB>")</small> | Insert environment variables, works in `tm_properties` |
@@ -199,6 +200,13 @@ reports**, and **feature requests**.
 
 ## Change Log
 
+**2024-05-12**
+
+- Add toggle format enable/disable with option+D
+- Improve README file
+
+---
+
 **2024-05-11**
 
 Small updates, fixes
@@ -210,14 +218,6 @@ Small updates, fixes
 - Add extra snippets
 - Add `tm_properties` helpers
 - Add `.ruff.toml` config helper
-
-**2024-05-10**
-
-Giga refactoring, improved code, structure and features.
-
-- Improve error handling and alert windows
-- Add go to error line feature
-- Improve document will/did save error handling
 
 You can read the whole story [here][changelog].
 
