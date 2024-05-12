@@ -84,8 +84,17 @@ module Linter
   def format_code(options={})
     cmd = options[:cmd]
     input = options[:input]
-    args = ["format", "-"]
     
+    args = ["format"]
+
+    unless TM_PYRUFF_OPTIONS.nil?
+      ruff_options = TM_PYRUFF_OPTIONS.tokenize
+      logger.debug "ruff_options: #{ruff_options.inspect}"
+      args += ruff_options
+    end
+
+    args << "-"
+
     out, err = run :cmd => cmd,
                    :input => input,
                    :args => args
@@ -131,12 +140,14 @@ module Linter
     document_line_count = options[:document_line_count]
 
     unless TM_PYRUFF_OPTIONS.nil?
-      ruff_options = TM_PYRUFF_OPTIONS.split(" ")
-      logger.info "has ruff_options: #{ruff_options.inspect}"
-      args.concat(ruff_options)
+      ruff_options = TM_PYRUFF_OPTIONS.tokenize
+      logger.debug "ruff_options: #{ruff_options.inspect}"
+      args += ruff_options
     end
     
     out, err = run :cmd => cmd, :args => args
+
+    Helpers.exit_boxify_tool_tip(err) if out.empty? || err.start_with?("error")
 
     result = parse_out(out)
     Helpers.set_markers("error", result[:mark_errors])

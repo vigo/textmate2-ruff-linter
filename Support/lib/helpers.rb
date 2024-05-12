@@ -1,5 +1,14 @@
 require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
 
+class String
+  def tokenize
+    self.
+      split(/\s(?=(?:[^'"]|'[^']*'|"[^"]*")*$)/).
+      select {|s| not s.empty? }.
+      map {|s| s.gsub(/(^ +)|( +$)|(^["']+)|(["]+$)/, '')}
+  end
+end
+
 module Helpers
   TM_DOCUMENT_UUID = ENV["TM_DOCUMENT_UUID"]
 

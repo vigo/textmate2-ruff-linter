@@ -20,7 +20,10 @@ TextMate bundle implementation of ruff linter with fantastic features 🎉
 ## Installation
 
 You need to install `ruff`. I prefer `brew`. It’s also available via `pip`.
-Set the `TM_PYRUFF` variable to your `ruff` binary.
+Set the `TM_PYRUFF` variable to your `ruff` binary. There is a fall-back mechanism,
+if you have already installed `ruff`, bundle check the command existance with
+`command -v ruff` if `TM_PYRUFF` is not set. If both fails, you need to set the
+value of `TM_PYRUFF` by hand :)
 
 ```bash
 brew install ruff
@@ -30,7 +33,7 @@ git clone https://github.com/vigo/textmate2-ruff-linter.git Python-Ruff-Linter.t
 
 TextMate sometimes doesn’t apply environment variable creation from
 command-line. If this doesn’t work, you need to apply/set manually from
-**TextMate > Settings** pull down menu.
+**TextMate > Settings > Variables** pull down menu.
 
 ```bash
 $ defaults write com.macromates.TextMate environmentVariables \
@@ -55,6 +58,18 @@ read:
 ```bash
 defaults write com.macromates.TextMate NSToolTipsFontSize 24
 ```
+
+---
+
+## TextMate Variables
+
+| Variable | Default Value | Description | 
+|:---------|:-----|:-----|
+| `ENABLE_LOGGING` |  | Set for development purposes |
+| `TM_PYRUFF` |  | Binary path of `ruff` |
+| `TM_PYRUFF_DISABLE` |  | Disable bundle |
+| `TM_PYRUFF_ENABLE_AUTOFIX` |  | Autofix fixables on save |
+| `TM_PYRUFF_OPTIONS` |  | Pass custom options if there is no config file |
 
 ---
 
@@ -99,17 +114,19 @@ If you want to enable autofix set `TM_PYRUFF_ENABLE_AUTOFIX` variable (any value
 
     TM_PYRUFF_ENABLE_AUTOFIX=1
 
----
+You can also pass extra options with using `TM_PYRUFF_OPTIONS` variable. If
+you don’t have `.ruff.toml`, you can set `TM_PYRUFF_OPTIONS` for custom format
+or custom check operations (via `.tm_properties` or **TextMate > Settings > Variables**):
 
-## TextMate Variables
+`.tm_properties` file:
 
-| Variable | Default Value | Description | 
-|:---------|:-----|:-----|
-| `ENABLE_LOGGING` |  | Set for development purposes |
-| `TM_PYRUFF` |  | Binary path of `ruff` |
-| `TM_PYRUFF_DISABLE` |  | Disable bundle |
-| `TM_PYRUFF_ENABLE_AUTOFIX` |  | Autofix fixables on save |
-| `TM_PYRUFF_OPTIONS` |  | Pass custom options if there is no config file |
+    TM_PYRUFF_OPTIONS="--config \"format.quote-style = 'single'\""
+
+**TextMate > Settings > Variables** (you don’t need to escape quotes):
+
+    TM_PYRUFF_OPTIONS  --config "format.quote-style = 'single'"
+
+Keep in mind, `TM_PYRUFF_OPTIONS` passed on `format` and `check` operations.
 
 ---
 
