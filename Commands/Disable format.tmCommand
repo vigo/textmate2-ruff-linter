@@ -17,7 +17,7 @@ RuffLinter.toggle_format</string>
 	<key>keyEquivalent</key>
 	<string>~d</string>
 	<key>name</key>
-	<string>Disable format</string>
+	<string>Disable (toggle) format</string>
 	<key>outputCaret</key>
 	<string>afterOutput</string>
 	<key>outputFormat</key>

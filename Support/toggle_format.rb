@@ -1,4 +1,3 @@
-require ENV["TM_SUPPORT_PATH"] + "/lib/escape"
 require ENV["TM_BUNDLE_SUPPORT"] + "/lib/logger"
 
 $selected = false
