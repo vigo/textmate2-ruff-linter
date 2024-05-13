@@ -5,8 +5,6 @@ require ENV["TM_BUNDLE_SUPPORT"] + "/lib/helpers"
 
 module RuffLinter
   include Logging
-  include Linter
-  include Storage
   
   TM_PYRUFF_DISABLE = !!ENV["TM_PYRUFF_DISABLE"]
   TM_PYRUFF = ENV["TM_PYRUFF"] || `command -v ruff`.chomp
@@ -24,24 +22,12 @@ module RuffLinter
     !`command -v #{TM_PYRUFF}`.chomp.empty?
   end
   
-  def read_stdin
-    @document = STDIN.read
-  end  
-  
-  def document
-    @document
-  end
-
-  def document=(value)
-    @document = value
-  end
-  
   def document_empty?
-    document.nil? || document.empty? || document.match(/\S/).nil?
+    @document.nil? || @document.empty? || @document.match(/\S/).nil?
   end
 
   def document_has_first_line_comment?
-    document.split("\n").first.include?("# TM_PYRUFF_DISABLE")
+    @document.split("\n").first.include?("# TM_PYRUFF_DISABLE")
   end
   
   def run_document_will_save(options={})
@@ -57,7 +43,7 @@ module RuffLinter
 
     Helpers.exit_discard unless enabled?
     
-    read_stdin
+    @document = STDIN.read
     
     Helpers.exit_discard if document_empty?
     Helpers.exit_discard if document_has_first_line_comment?
@@ -65,33 +51,33 @@ module RuffLinter
     errors_sort_imports = nil
     errors_format_code = nil
 
-    out, errors_sort_imports = Linter.sort_imports(:cmd => TM_PYRUFF, :input => document)
-    document = out
+    out, errors_sort_imports = Linter.sort_imports(:cmd => TM_PYRUFF, :input => @document)
+    @document = out
     
     if errors_sort_imports.nil?
-      out, errors_format_code = Linter.format_code(:cmd => TM_PYRUFF, :input => document)
-      document = out
+      out, errors_format_code = Linter.format_code(:cmd => TM_PYRUFF, :input => @document)
+      @document = out
     else
       logger.error "errors_sort_imports: #{errors_sort_imports.inspect}"
     end
     
     if errors_format_code.nil?
       if options[:autofix] || TM_PYRUFF_ENABLE_AUTOFIX
-        out = Linter.autofix(:cmd => TM_PYRUFF, :input => document)
-        document = out
+        out = Linter.autofix(:cmd => TM_PYRUFF, :input => @document)
+        @document = out
       else
         logger.error "errors_format_code: #{errors_format_code.inspect}"
       end
     end
     
-    print document
+    print @document
   end
   
   def run_document_did_save
     Helpers.exit_discard unless can_run?
     Helpers.exit_discard unless enabled?
 
-    read_stdin
+    @document = STDIN.read
     
     Helpers.exit_discard if document_empty?
     Helpers.exit_discard if document_has_first_line_comment?
@@ -103,7 +89,7 @@ module RuffLinter
     end
     
     Linter.check(:cmd => TM_PYRUFF, 
-                 :document_line_count => document.split("\n").size)
+                 :document_line_count => @document.split("\n").size)
   end
 
   def noqalize_all
@@ -116,7 +102,7 @@ module RuffLinter
     end
     Helpers.exit_discard unless enabled?
     
-    read_stdin
+    @document = STDIN.read
     
     Helpers.exit_discard if document_empty?
     Helpers.exit_discard if document_has_first_line_comment?
