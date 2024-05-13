@@ -1,9 +1,18 @@
 # Change Log
 
+**2024-05-14**
+
+- Improve code structure (modules)
+- Add report errors (rule description) preview with option+R
+
+---
+
 **2024-05-12**
 
 - Add toggle format enable/disable with option+D
 - Improve README file
+
+---
 
 **2024-05-11**
 
