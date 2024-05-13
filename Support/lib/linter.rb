@@ -14,7 +14,7 @@ module Linter
     input = options[:input]
     args = options[:args]
     
-    logger.debug "cmd: #{cmd} | nil input: #{input.nil?} | args: #{args.inspect}"
+    logger.debug "cmd: #{cmd} | nil input: #{input.nil?} | args: #{args.inspect} | input: #{input.nil? ? TM_FILEPATH : "input"}"
     
     if input.nil?
       return TextMate::Process.run(cmd, args, TM_FILEPATH)

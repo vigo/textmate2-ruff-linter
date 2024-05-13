@@ -7,27 +7,27 @@
 	<key>command</key>
 	<string>#!/usr/bin/env ruby18 -wKU
 
-require ENV["TM_BUNDLE_SUPPORT"] + "/toggle_format"
+require ENV["TM_BUNDLE_SUPPORT"] + "/report_errors"
 
-RuffLinter.toggle_format</string>
+RuffLinter.report</string>
 	<key>input</key>
-	<string>selection</string>
+	<string>document</string>
 	<key>inputFormat</key>
 	<string>text</string>
 	<key>keyEquivalent</key>
-	<string>~d</string>
+	<string>~r</string>
 	<key>name</key>
-	<string>Disable (toggle) format</string>
+	<string>Report Errors</string>
 	<key>outputCaret</key>
 	<string>afterOutput</string>
 	<key>outputFormat</key>
-	<string>snippet</string>
+	<string>text</string>
 	<key>outputLocation</key>
-	<string>replaceInput</string>
+	<string>toolTip</string>
 	<key>scope</key>
 	<string>source.python.ruff</string>
 	<key>uuid</key>
-	<string>DD22FE90-953D-44D2-A654-D7A8DEB22905</string>
+	<string>3D3A5357-6880-4DE6-A545-B5E44B083C12</string>
 	<key>version</key>
 	<integer>2</integer>
 </dict>
