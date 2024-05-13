@@ -177,7 +177,8 @@ module Helpers
     total_count = default_errors_count + fixable_errors_count
 
     output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! ⚠️\n"
-    output << "🔍 Use Option ( ⌥ ) + G to jump error line!\n"
+    output << "🔍 Use Option ( ⌥ ) + G to jump error line!"
+    output << "📋 Use Option ( ⌥ ) + R to display error report!\n"
     
     if default_errors_count > 0
       output << "[#{default_errors_count}] default #{pluralize(default_errors_count, "error")}:"

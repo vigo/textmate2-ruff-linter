@@ -70,8 +70,11 @@ defaults write com.macromates.TextMate NSToolTipsFontSize 24
 | `TM_PYRUFF_DISABLE` |  | Disable bundle |
 | `TM_PYRUFF_ENABLE_AUTOFIX` |  | Autofix fixables on save |
 | `TM_PYRUFF_OPTIONS` |  | Pass custom options if there is no config file |
+| `TM_PYRUFF_GFM_ZOOM_FACTOR` | `100%` | Zoom factor for report errors screen |
 
 ---
+
+![Demo 3](screens/ruff-demo-03.gif)
 
 ## Usage
 
@@ -139,7 +142,8 @@ Keep in mind, `TM_PYRUFF_OPTIONS` passed on `format` and `check` operations.
 | <kbd>⌥</kbd> + <kbd>G</kbd> | <small>(option + G)</small> | Go to error marked line/column |
 | <kbd>⌥</kbd> + <kbd>T</kbd> | <small>(option + T)</small> | `tm_properties` helper |
 | <kbd>⌥</kbd> + <kbd>T</kbd> | <small>(option + T)</small> | `.ruff.toml` config helper |
-| <kbd>⌥</kbd> + <kbd>D</kbd> | <small>(option + D)</small> | Enable / Disable format for selected lines |
+| <kbd>⌥</kbd> + <kbd>D</kbd> | <small>(option + D)</small> | Enable / Disable (toggle) format for selected lines |
+| <kbd>⌥</kbd> + <kbd>R</kbd> | <small>(option + R)</small> | Report errors (rule descriptions) for current errors |
 | `disable` + <kbd>⇥</kbd> | <small>(type "disable<TAB>")</small> | Adds `# TM_PYRUFF_DISABLE` text |
 | `noq` + <kbd>⇥</kbd> | <small>(type "noq<TAB>")</small> | Some noqa options |
 | `envi` + <kbd>⇥</kbd> | <small>(type "envi<TAB>")</small> | Insert environment variables, works in `tm_properties` |
@@ -199,6 +203,13 @@ reports**, and **feature requests**.
 ---
 
 ## Change Log
+
+**2024-05-14**
+
+- Improve code structure (modules)
+- Add report errors (rule description) preview with option+R
+
+---
 
 **2024-05-12**
 

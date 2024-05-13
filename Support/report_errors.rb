@@ -17,20 +17,24 @@ module RuffLinter
 
   def report_errors
     input = STDIN.read
+    exit_boxify_tool_tip("Nothing to preview") if input.empty?
+
     cmd = Constants::TM_PYRUFF
     args = ["check", "--output-format", "grouped"]
 
     out, err = TextMate::Process.run(cmd, args, :input => input)
-    logger.info "aaaaaaaa"
-    # print out
-    # puts "---"
-    # print err
-    # puts "---"
+    logger.debug "out:\n#{out.inspect}"
+    logger.error "err: #{err.inspect}"
+    
+    exit_boxify_tool_tip("Error\n#{err}") unless err.empty?
+    exit_boxify_tool_tip("Error\nWe have a problem") if out.empty?
+    exit_boxify_tool_tip("Nothing to preview") if out.start_with?("All checks passed")
+
     parsed = parse_out(out)
-    # puts "#{parsed.keys.inspect}"
-    
+    exit_boxify_tool_tip("Nothing to preview") if parsed.size == 0
+
     errors = parsed[:default_errors] + parsed[:fixable_errors]
-    
+
     code_set = errors.inject(Set.new) do |set, hash|
       set.add(hash[:code])
       set
