@@ -9,7 +9,7 @@
 
 require ENV["TM_BUNDLE_SUPPORT"] + "/report_errors"
 
-RuffLinter.report</string>
+RuffLinter.report_errors</string>
 	<key>input</key>
 	<string>document</string>
 	<key>inputFormat</key>
@@ -21,9 +21,9 @@ RuffLinter.report</string>
 	<key>outputCaret</key>
 	<string>afterOutput</string>
 	<key>outputFormat</key>
-	<string>text</string>
+	<string>html</string>
 	<key>outputLocation</key>
-	<string>toolTip</string>
+	<string>newWindow</string>
 	<key>scope</key>
 	<string>source.python.ruff</string>
 	<key>uuid</key>

@@ -1,5 +1,8 @@
 require ENV['TM_SUPPORT_PATH'] + '/lib/exit_codes'
 
+require ENV["TM_BUNDLE_SUPPORT"] + "/lib/constants"
+require ENV["TM_BUNDLE_SUPPORT"] + "/lib/storage"
+
 class String
   def tokenize
     self.
@@ -10,14 +13,7 @@ class String
 end
 
 module Helpers
-  TM_DOCUMENT_UUID = ENV["TM_DOCUMENT_UUID"]
-
-  TM_PROJECT_DIRECTORY = ENV["TM_PROJECT_DIRECTORY"]
-  TM_FILENAME = ENV["TM_FILENAME"]
-
-  TOOLTIP_LINE_LENGTH = ENV["TM_PYRUFF_TOOLTIP_LINE_LENGTH"] || "100"
-  TOOLTIP_LEFT_PADDING = ENV["TM_PYRUFF_TOOLTIP_LEFT_PADDING"] || "2"
-  TOOLTIP_BORDER_CHAR = ENV["TM_PYRUFF_TOOLTIP_BORDER_CHAR"] || "-"
+  extend Storage
 
   module_function
   
@@ -27,13 +23,13 @@ module Helpers
   end
 
   def goto(line)
-    system(ENV["TM_MATE"], "--uuid", TM_DOCUMENT_UUID, "--line", line)
+    system(ENV["TM_MATE"], "--uuid", Constants::TM_DOCUMENT_UUID, "--line", line)
   end
   
   def reset_markers
     system(
       ENV["TM_MATE"],
-      "--uuid", TM_DOCUMENT_UUID,
+      "--uuid", Constants::TM_DOCUMENT_UUID,
       "--clear-mark=note",
       "--clear-mark=warning",
       "--clear-mark=error"
@@ -43,7 +39,7 @@ module Helpers
   def set_marker(mark, line, msg)
     unless line.nil?
       tm_args = [
-        '--uuid', TM_DOCUMENT_UUID,
+        '--uuid', Constants::TM_DOCUMENT_UUID,
         '--line', "#{line}",
         '--set-mark', "#{mark}:#{msg}",
       ]
@@ -102,10 +98,10 @@ module Helpers
   end
 
   def boxify(txt)
-    s = chunkify(txt, TOOLTIP_LINE_LENGTH.to_i, TOOLTIP_LEFT_PADDING.to_i)
+    s = chunkify(txt, Constants::TOOLTIP_LINE_LENGTH.to_i, Constants::TOOLTIP_LEFT_PADDING.to_i)
     s = s.split("\n")
     ll = s.map{|l| l.size}.max || 1
-    lsp = TOOLTIP_BORDER_CHAR * ll
+    lsp = Constants::TOOLTIP_BORDER_CHAR * ll
     s.unshift(lsp)
     s << lsp
     s = s.map{|l| "  #{l}  "}
@@ -114,6 +110,152 @@ module Helpers
 
   def exit_boxify_tool_tip(msg)
     TextMate.exit_show_tool_tip(boxify(msg))
+  end
+
+  def pad_number(lines_count, line_number)
+    padding = lines_count.to_s.length
+    padding = 2 if lines_count < 10
+    return sprintf("%0#{padding}d", line_number)
+  end
+
+  def check_errors(err, store=false)
+    all_checks_passed = "All checks passed!" 
+    if err.nil? || 
+       err.empty? || 
+       err.start_with?(all_checks_passed) ||
+       err.start_with?("Found 1 error (1 fixed, 0 remaining)")
+       return nil
+    end
+
+    if err.start_with?("ruff failed") && store
+      errors = ["Critical error:\n"] + err.split("\n")
+      create_storage(errors)
+      logger.error "#{errors.inspect}"
+      return errors
+    end
+    
+    if err.start_with?("warning:")
+      errors = ["You must fix this warning to continue:\n"] + err.split("\n")
+      create_storage(errors)
+      logger.error "#{errors.inspect}"
+      return errors
+    end
+
+    if err.start_with?("error:")
+      original_errors = err.split("\n")
+      errors = ["Error\n"] + original_errors
+      errors.delete(all_checks_passed) if errors.include?(all_checks_passed)
+      create_storage(errors)
+      logger.error "#{errors.inspect}"
+
+      match = original_errors.first.match(/^.+?(\d+):(\d+):\s(.+)$/)
+      if match
+        line_number = match[1]
+        column_number = match[2]
+        message = match[3]
+        
+        set_marker "warning", line_number, message
+        goto "#{line_number}:#{column_number}"
+      end
+
+      return errors
+    end
+
+    return nil
+  end
+
+  def display_result(result, line_count)
+    exit_boxify_tool_tip("🎉 congrats! \"#{Constants::TM_FILENAME}\" has zero errors 👍") if result[:mark_errors].size == 0
+    
+    destroy_storage(true)
+    
+    output = []
+    go_to_errors = []
+    
+    default_errors_count = result[:default_errors].size
+    fixable_errors_count = result[:fixable_errors].size
+    total_count = default_errors_count + fixable_errors_count
+
+    output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! ⚠️\n"
+    output << "🔍 Use Option ( ⌥ ) + G to jump error line!\n"
+    
+    if default_errors_count > 0
+      output << "[#{default_errors_count}] default #{pluralize(default_errors_count, "error")}:"
+      result[:default_errors].sort_by{|err| err[:line_number]}.each do |err|
+        output << "  - #{err[:line_number]} -> #{err[:message]}"
+        fmt_ln = pad_number(line_count, err[:line_number])
+        fmt_cn = pad_number(line_count, err[:column_number])
+        go_to_errors << "#{fmt_ln}:#{fmt_cn} | #{err[:message]}"
+      end
+    end
+
+    output << "" if fixable_errors_count > 0
+
+    if fixable_errors_count > 0
+      output << "[#{fixable_errors_count}] fixable #{pluralize(fixable_errors_count, "error")}:"
+      result[:fixable_errors].sort_by{|err| err[:line_number]}.each do |err|
+        output << "  - #{err[:line_number]} -> #{err[:message]}"
+        fmt_ln = pad_number(line_count, err[:line_number])
+        fmt_cn = pad_number(line_count, err[:column_number])
+        go_to_errors << "#{fmt_ln}:#{fmt_cn} | #{err[:message]}"
+      end
+    end
+    
+    output << "" if result[:extras].size > 0
+    
+    output.concat(result[:extras]) if result[:extras].size > 0
+    
+    create_storage(go_to_errors, true) if go_to_errors
+    
+    exit_boxify_tool_tip(output.join("\n"))
+  end
+
+  def parse_out(out)
+    input = out.split("\n")
+
+    mark_errors = {}
+    default_errors = []
+    fixable_errors = []
+    extras = []
+    
+    if input.first.include?(Constants::TM_FILENAME)
+      input[1..-1].each do |line|
+        if line.start_with?(" ")
+          match = line.match(/(\d+):(\d+)\s+(\w+)\s+(\[\*\]\s+)?(.+)/)
+          if match
+            line_number = match[1].to_i
+            column_number = match[2].to_i
+            code = match[3]
+            fixable = !match[4].nil?
+            message = match[5].strip
+            
+            mark_errors[line_number] = [] unless mark_errors.has_key?(line_number)
+            error = {
+              :line_number => line_number,
+              :column_number => column_number,
+              :code => code,
+              :fixable => fixable,
+              :message => "[#{code}]: #{message}",
+            }
+            mark_errors[line_number] << error
+            if fixable
+              fixable_errors << error
+            else
+              default_errors << error
+            end
+          end
+        else
+          extras << line unless line.empty?
+        end
+      end
+    end
+    
+    return {
+      :mark_errors => mark_errors,
+      :default_errors => default_errors,
+      :fixable_errors => fixable_errors,
+      :extras => extras,
+    }
   end
 
 end
