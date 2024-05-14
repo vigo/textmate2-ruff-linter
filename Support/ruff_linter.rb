@@ -63,7 +63,7 @@ module RuffLinter
     
     if errors_format_code.nil?
       if options[:autofix] || Constants::TM_PYRUFF_ENABLE_AUTOFIX
-        out = Linter.autofix :input => @document
+        out = Linter.autofix :input => @document, :manual => options[:autofix]
         @document = out
       else
         logger.error "errors_format_code: #{errors_format_code.inspect}"
