@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-1.1.1-orange.svg?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.1.2-orange.svg?style=for-the-badge)
 ![TextMate](https://img.shields.io/badge/textmate-2.0.23-green.svg?style=for-the-badge)
 ![macOS](https://img.shields.io/badge/macos-ventura-yellow.svg?style=for-the-badge)
 ![macOS](https://img.shields.io/badge/macos-sonoma-yellow.svg?style=for-the-badge)
