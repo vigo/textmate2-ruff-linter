@@ -41,13 +41,7 @@ module Linter
     input = options[:input]
     
     args = ["format"]
-
-    unless Constants::TM_PYRUFF_OPTIONS.nil?
-      ruff_options = Constants::TM_PYRUFF_OPTIONS.tokenize
-      logger.debug "ruff_options: #{ruff_options.inspect}"
-      args += ruff_options
-    end
-
+    args += get_ruff_extra_options if get_ruff_extra_options
     args << "-"
 
     out, err = run :input => input,
@@ -60,14 +54,12 @@ module Linter
   
   def autofix(options={})
     input = options[:input]
+    manual = options[:manual]
 
-    args = [
-      "check",
-      "--fix",
-      "--output-format", "grouped",
-      "--stdin-filename", Constants::TM_FILENAME,
-      "-",
-    ]
+    args = ["check", "--fix", "--output-format", "grouped"]
+    args += get_ruff_extra_options if get_ruff_extra_options
+    args += ["--config", get_ruff_config_file] if get_ruff_config_file && manual
+    args += ["--stdin-filename", Constants::TM_FILENAME, "-"]
 
     out, err = run :input => input,
                    :args => args
@@ -79,6 +71,7 @@ module Linter
   
   def noqalize(options={})
     args = ["check", "--add-noqa"]
+    args += get_ruff_extra_options if get_ruff_extra_options
 
     out, err = run :args => args
 
@@ -87,15 +80,11 @@ module Linter
   end
   
   def check(options={})
-    args = ["check", "--output-format", "grouped"]
     document_line_count = options[:document_line_count]
 
-    unless Constants::TM_PYRUFF_OPTIONS.nil?
-      ruff_options = Constants::TM_PYRUFF_OPTIONS.tokenize
-      logger.debug "ruff_options: #{ruff_options.inspect}"
-      args += ruff_options
-    end
-    
+    args = ["check", "--output-format", "grouped"]
+    args += get_ruff_extra_options if get_ruff_extra_options    
+
     out, err = run :args => args
 
     exit_boxify_tool_tip(err) if out.empty? || err.start_with?("error")

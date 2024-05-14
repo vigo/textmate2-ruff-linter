@@ -178,7 +178,10 @@ module Helpers
 
     output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! ⚠️\n"
     output << "🔍 Use Option ( ⌥ ) + G to jump error line!"
-    output << "📋 Use Option ( ⌥ ) + R to display error report!\n"
+    output << "📋 Use Option ( ⌥ ) + R to display error report!"
+    output << "🔄 Use Option ( ⌥ ) + A to noqalize all problematic lines"
+    output << "🛠️ Use Option ( ⌥ ) + F to autofix autofixables"
+    output << "\n"
     
     if default_errors_count > 0
       output << "[#{default_errors_count}] default #{pluralize(default_errors_count, "error")}:"
@@ -259,4 +262,18 @@ module Helpers
     }
   end
 
+  def get_ruff_config_file
+    config_file = File.join(Constants::TM_PROJECT_DIRECTORY, ".ruff.toml")
+    return config_file if File.exists?(config_file)
+    return nil
+  end
+
+  def get_ruff_extra_options
+    unless Constants::TM_PYRUFF_OPTIONS.nil?
+      ruff_options = Constants::TM_PYRUFF_OPTIONS.tokenize
+      logger.debug "ruff_options: #{ruff_options.inspect}"
+      return ruff_options
+    end
+    return nil
+  end
 end

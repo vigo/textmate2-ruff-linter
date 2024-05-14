@@ -20,9 +20,13 @@ module RuffLinter
     exit_boxify_tool_tip("Nothing to preview") if input.empty?
 
     cmd = Constants::TM_PYRUFF
-    args = ["check", "--output-format", "grouped", "--stdin-filename", Constants::TM_FILENAME]
+    args = ["check", "--output-format", "grouped"]
+    args += ["--config", get_ruff_config_file] if get_ruff_config_file
+    args += get_ruff_extra_options if get_ruff_extra_options
+    args += ["--stdin-filename", Constants::TM_FILENAME]
 
     out, err = TextMate::Process.run(cmd, args, :input => input)
+    logger.debug "input:\n#{input.inspect}"
     logger.debug "out:\n#{out.inspect}"
     logger.error "err: #{err.inspect}"
     
