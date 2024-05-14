@@ -20,7 +20,7 @@ module RuffLinter
     exit_boxify_tool_tip("Nothing to preview") if input.empty?
 
     cmd = Constants::TM_PYRUFF
-    args = ["check", "--output-format", "grouped"]
+    args = ["check", "--output-format", "grouped", "--stdin-filename", Constants::TM_FILENAME]
 
     out, err = TextMate::Process.run(cmd, args, :input => input)
     logger.debug "out:\n#{out.inspect}"
@@ -31,6 +31,7 @@ module RuffLinter
     exit_boxify_tool_tip("Nothing to preview") if out.start_with?("All checks passed")
 
     parsed = parse_out(out)
+    logger.debug "parsed: #{parsed.inspect}"
     exit_boxify_tool_tip("Nothing to preview") if parsed.size == 0
 
     errors = parsed[:default_errors] + parsed[:fixable_errors]
