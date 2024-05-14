@@ -13,6 +13,8 @@ class String
 end
 
 module Helpers
+  include Constants
+
   extend Storage
 
   module_function
@@ -23,13 +25,13 @@ module Helpers
   end
 
   def goto(line)
-    system(ENV["TM_MATE"], "--uuid", Constants::TM_DOCUMENT_UUID, "--line", line)
+    system(ENV["TM_MATE"], "--uuid", TM_DOCUMENT_UUID, "--line", line)
   end
   
   def reset_markers
     system(
       ENV["TM_MATE"],
-      "--uuid", Constants::TM_DOCUMENT_UUID,
+      "--uuid", TM_DOCUMENT_UUID,
       "--clear-mark=note",
       "--clear-mark=warning",
       "--clear-mark=error"
@@ -39,7 +41,7 @@ module Helpers
   def set_marker(mark, line, msg)
     unless line.nil?
       tm_args = [
-        '--uuid', Constants::TM_DOCUMENT_UUID,
+        '--uuid', TM_DOCUMENT_UUID,
         '--line', "#{line}",
         '--set-mark', "#{mark}:#{msg}",
       ]
@@ -98,10 +100,10 @@ module Helpers
   end
 
   def boxify(txt)
-    s = chunkify(txt, Constants::TOOLTIP_LINE_LENGTH.to_i, Constants::TOOLTIP_LEFT_PADDING.to_i)
+    s = chunkify(txt, TOOLTIP_LINE_LENGTH.to_i, TOOLTIP_LEFT_PADDING.to_i)
     s = s.split("\n")
     ll = s.map{|l| l.size}.max || 1
-    lsp = Constants::TOOLTIP_BORDER_CHAR * ll
+    lsp = TOOLTIP_BORDER_CHAR * ll
     s.unshift(lsp)
     s << lsp
     s = s.map{|l| "  #{l}  "}
@@ -165,7 +167,7 @@ module Helpers
   end
 
   def display_result(result, line_count)
-    exit_boxify_tool_tip("🎉 congrats! \"#{Constants::TM_FILENAME}\" has zero errors 👍") if result[:mark_errors].size == 0
+    exit_boxify_tool_tip("🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍") if result[:mark_errors].size == 0
     
     destroy_storage(true)
     
@@ -222,7 +224,7 @@ module Helpers
     fixable_errors = []
     extras = []
     
-    if input.first.include?(Constants::TM_FILENAME)
+    if input.first.include?(TM_FILENAME)
       input[1..-1].each do |line|
         if line.start_with?(" ")
           match = line.match(/(\d+):(\d+)\s+(\w+)\s+(\[\*\]\s+)?(.+)/)
@@ -263,14 +265,14 @@ module Helpers
   end
 
   def get_ruff_config_file
-    config_file = File.join(Constants::TM_PROJECT_DIRECTORY, ".ruff.toml")
+    config_file = File.join(TM_PROJECT_DIRECTORY, ".ruff.toml")
     return config_file if File.exists?(config_file)
     return nil
   end
 
   def get_ruff_extra_options
-    unless Constants::TM_PYRUFF_OPTIONS.nil?
-      ruff_options = Constants::TM_PYRUFF_OPTIONS.tokenize
+    unless TM_PYRUFF_OPTIONS.nil?
+      ruff_options = TM_PYRUFF_OPTIONS.tokenize
       logger.debug "ruff_options: #{ruff_options.inspect}"
       return ruff_options
     end

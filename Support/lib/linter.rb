@@ -6,6 +6,8 @@ require ENV["TM_BUNDLE_SUPPORT"] + "/lib/storage"
 require ENV["TM_BUNDLE_SUPPORT"] + "/lib/helpers"
 
 module Linter
+  include Constants
+
   extend Logging::ClassMethods
   extend Storage
   extend Helpers
@@ -13,14 +15,14 @@ module Linter
   module_function
 
   def run(options={})
-    cmd = Constants::TM_PYRUFF
+    cmd = TM_PYRUFF
     input = options[:input]
     args = options[:args]
     
-    logger.debug "cmd: #{cmd} | nil input: #{input.nil?} | args: #{args.inspect} | input: #{input.nil? ? Constants::TM_FILEPATH : "input"}"
+    logger.debug "cmd: #{cmd} | nil input: #{input.nil?} | args: #{args.inspect} | input: #{input.nil? ? TM_FILEPATH : "input"}"
     
     if input.nil?
-      return TextMate::Process.run(cmd, args, Constants::TM_FILEPATH)
+      return TextMate::Process.run(cmd, args, TM_FILEPATH)
     else
       return TextMate::Process.run(cmd, args, :input => input)
     end
@@ -59,7 +61,7 @@ module Linter
     args = ["check", "--fix", "--output-format", "grouped"]
     args += get_ruff_extra_options if get_ruff_extra_options
     args += ["--config", get_ruff_config_file] if get_ruff_config_file && manual
-    args += ["--stdin-filename", Constants::TM_FILENAME, "-"]
+    args += ["--stdin-filename", TM_FILENAME, "-"]
 
     out, err = run :input => input,
                    :args => args
