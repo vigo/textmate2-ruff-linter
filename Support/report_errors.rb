@@ -7,7 +7,9 @@ require ENV["TM_BUNDLE_SUPPORT"] + "/lib/logger"
 require ENV["TM_BUNDLE_SUPPORT"] + "/lib/helpers"
 
 module RuffLinter
+  include Constants
   include Logging
+
   extend Helpers
 
   TM_PYRUFF = ENV["TM_PYRUFF"] || `command -v ruff`.chomp
@@ -19,11 +21,11 @@ module RuffLinter
     input = STDIN.read
     exit_boxify_tool_tip("Nothing to preview") if input.empty?
 
-    cmd = Constants::TM_PYRUFF
+    cmd = TM_PYRUFF
     args = ["check", "--output-format", "grouped"]
     args += ["--config", get_ruff_config_file] if get_ruff_config_file
     args += get_ruff_extra_options if get_ruff_extra_options
-    args += ["--stdin-filename", Constants::TM_FILENAME]
+    args += ["--stdin-filename", TM_FILENAME]
 
     out, err = TextMate::Process.run(cmd, args, :input => input)
     logger.debug "input:\n#{input.inspect}"

@@ -6,6 +6,7 @@ require ENV["TM_BUNDLE_SUPPORT"] + "/lib/helpers"
 
 module RuffLinter
   include Logging
+  include Constants
 
   extend Helpers
   extend Storage
@@ -15,11 +16,11 @@ module RuffLinter
   module_function
   
   def enabled?
-    !Constants::TM_PYRUFF_DISABLE
+    !TM_PYRUFF_DISABLE
   end
 
   def can_run?
-    !`command -v #{Constants::TM_PYRUFF}`.chomp.empty?
+    !`command -v #{TM_PYRUFF}`.chomp.empty?
   end
   
   def document_empty?
@@ -62,7 +63,7 @@ module RuffLinter
     end
     
     if errors_format_code.nil?
-      if options[:autofix] || Constants::TM_PYRUFF_ENABLE_AUTOFIX
+      if options[:autofix] || TM_PYRUFF_ENABLE_AUTOFIX
         out = Linter.autofix :input => @document, :manual => options[:autofix]
         @document = out
       else

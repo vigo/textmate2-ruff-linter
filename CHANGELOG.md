@@ -4,6 +4,7 @@
 
 - Improve code structure (modules)
 - Add report errors (rule description) preview with option+R
+- Add import sort disabler (`noq<TAB>`)
 
 ---
 
