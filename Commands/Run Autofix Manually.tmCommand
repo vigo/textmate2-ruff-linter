@@ -19,7 +19,7 @@ RuffLinter.run_document_will_save(:autofix =&gt; true)</string>
 	<key>name</key>
 	<string>Run Autofix Manually</string>
 	<key>outputCaret</key>
-	<string>afterOutput</string>
+	<string>interpolateByChar</string>
 	<key>outputFormat</key>
 	<string>text</string>
 	<key>outputLocation</key>
