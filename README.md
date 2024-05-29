@@ -204,6 +204,13 @@ reports**, and **feature requests**.
 
 ## Change Log
 
+**2024-05-29**
+
+- Add `ruff` version to results
+- Add **Disable Ruff for file** with `noq`+TAB (adds `# ruff: noqa`)
+
+---
+
 **2024-05-14**
 
 - Improve code structure (modules)
