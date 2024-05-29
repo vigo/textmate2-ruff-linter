@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<string>${1:# ruff: noqa}</string>
+	<key>name</key>
+	<string>Disable Ruff for file</string>
+	<key>scope</key>
+	<string>source.python.ruff</string>
+	<key>tabTrigger</key>
+	<string>noq</string>
+	<key>uuid</key>
+	<string>31ECF00E-DCBE-4085-841C-13493E428018</string>
+</dict>
+</plist>

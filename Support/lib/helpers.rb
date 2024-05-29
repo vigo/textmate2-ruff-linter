@@ -167,7 +167,10 @@ module Helpers
   end
 
   def display_result(result, line_count)
-    exit_boxify_tool_tip("🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍") if result[:mark_errors].size == 0
+    if result[:mark_errors].size == 0
+      ruff_version = `ruff --version`.chomp
+      exit_boxify_tool_tip("🎉 congrats! \"#{TM_FILENAME}\" has zero errors [#{ruff_version}] 👍")
+    end
     
     destroy_storage(true)
     
