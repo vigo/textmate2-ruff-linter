@@ -42,6 +42,7 @@ error text from the modal dialog.
 - OS: [e.g., macOS]
 - CPU: [e.g., M3]
 - TextMate version: [e.g., 2.0]
+- Ruff version: [e.g., 0.4.8]
 - Bundle version: [if applicable]
 
 ## Additional context
