@@ -10,11 +10,15 @@
 	<array>
 		<dict>
 			<key>include</key>
-			<string>source.python</string>
+			<string>source.python.django.extended</string>
 		</dict>
 		<dict>
 			<key>include</key>
 			<string>source.python.django</string>
+		</dict>
+		<dict>
+			<key>include</key>
+			<string>source.python</string>
 		</dict>
 	</array>
 	<key>scopeName</key>
