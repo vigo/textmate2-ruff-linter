@@ -59,6 +59,25 @@ read:
 defaults write com.macromates.TextMate NSToolTipsFontSize 24
 ```
 
+### Bonus
+
+When you press <kbd>⌥ (option)</kbd> + <kbd>R</kbd> error reporting pops.
+TextMate’s built-in markdown parser is super outdated, this is normal.
+I’ve modified the original `Markdown.pl` file and shared under `Goodies/`
+folder. Just copy the file under correct location:
+
+```bash
+# backup the original first :)
+cp "~/Library/Application Support/TextMate/Managed/Bundles/Bundle Support.tmbundle/Support/shared/bin/Markdown.pl" "~/Library/Application Support/TextMate/Managed/Bundles/Bundle Support.tmbundle/Support/shared/bin/Markdown-original.pl"
+
+# replace with new one.
+cp Goodies/Markdown.pl "~/Library/Application Support/TextMate/Managed/Bundles/Bundle Support.tmbundle/Support/shared/bin/"
+```
+
+You should see fancy code-blocks parsed as expected:
+
+![Better Markdown Preview](screens/error-reporting-preview.png)
+
 ---
 
 ## TextMate Variables

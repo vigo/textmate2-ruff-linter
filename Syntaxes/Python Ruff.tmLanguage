@@ -10,7 +10,7 @@
 	<array>
 		<dict>
 			<key>include</key>
-			<string>source.python.django.extended</string>
+			<string>source.python</string>
 		</dict>
 		<dict>
 			<key>include</key>
@@ -18,7 +18,7 @@
 		</dict>
 		<dict>
 			<key>include</key>
-			<string>source.python</string>
+			<string>source.python.django.extended</string>
 		</dict>
 	</array>
 	<key>scopeName</key>
