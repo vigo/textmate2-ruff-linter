@@ -30,7 +30,14 @@ module Linter
 
   def sort_imports(options={})
     input = options[:input]
-    args = ["check", "--select", "I", "--fix", "-"]
+    args = [
+      "check",
+      "--select", "I",
+      "--fix",
+      "--stdin-filename", TM_STDIN_FILENAME,
+      "-",
+    ]
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
 
     out, err = run :input => input, :args => args
 
@@ -42,8 +49,8 @@ module Linter
   def format_code(options={})
     input = options[:input]
     
-    args = ["format"]
-    args += get_ruff_extra_options if get_ruff_extra_options
+    args = ["format", "--stdin-filename", TM_STDIN_FILENAME]
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
     args << "-"
 
     out, err = run :input => input,
@@ -59,9 +66,8 @@ module Linter
     manual = options[:manual]
 
     args = ["check", "--fix", "--output-format", "grouped"]
-    args += get_ruff_extra_options if get_ruff_extra_options
-    args += ["--config", get_ruff_config_file] if get_ruff_config_file && manual
-    args += ["--stdin-filename", TM_FILENAME, "-"]
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
+    args += ["--stdin-filename", TM_STDIN_FILENAME, "-"]
 
     out, err = run :input => input,
                    :args => args
@@ -73,19 +79,25 @@ module Linter
   
   def noqalize(options={})
     args = ["check", "--add-noqa"]
-    args += get_ruff_extra_options if get_ruff_extra_options
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
 
     out, err = run :args => args
 
+    logger.warn "noqalize out: #{out.inspect}"
     logger.warn "noqalize err: #{err.inspect}"
-    exit_boxify_tool_tip("🎉 #{err.chomp} 👍") if out.empty?
+    logger.warn "noqalize err.empty?: #{err.empty?}"
+
+    noqalize_message = "⚠️ nothing to suppress as noqa: CODE ⚠️"
+    noqalize_message = "🎉 #{err.chomp} 👍" unless err.empty?
+    
+    exit_boxify_tool_tip(noqalize_message)
   end
   
   def check(options={})
     document_line_count = options[:document_line_count]
 
     args = ["check", "--output-format", "grouped"]
-    args += get_ruff_extra_options if get_ruff_extra_options    
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
 
     out, err = run :args => args
 
