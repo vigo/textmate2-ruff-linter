@@ -167,8 +167,9 @@ module Helpers
   end
 
   def display_result(result, line_count)
+    ruff_version = `ruff --version`.chomp
+    
     if result[:mark_errors].size == 0
-      ruff_version = `ruff --version`.chomp
       exit_boxify_tool_tip("🎉 congrats! \"#{TM_FILENAME}\" has zero errors [#{ruff_version}] 👍")
     end
     
@@ -181,12 +182,12 @@ module Helpers
     fixable_errors_count = result[:fixable_errors].size
     total_count = default_errors_count + fixable_errors_count
 
-    output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! ⚠️\n"
+    output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! [#{ruff_version}] ⚠️\n"
     output << "🔍 Use Option ( ⌥ ) + G to jump error line!"
     output << "📋 Use Option ( ⌥ ) + R to display error report!"
     output << "🔄 Use Option ( ⌥ ) + A to noqalize all problematic lines"
     output << "🛠️ Use Option ( ⌥ ) + F to autofix autofixables"
-    output << "\n"
+    output << "---"
     
     if default_errors_count > 0
       output << "[#{default_errors_count}] default #{pluralize(default_errors_count, "error")}:"

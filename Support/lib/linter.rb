@@ -30,7 +30,7 @@ module Linter
 
   def sort_imports(options={})
     input = options[:input]
-    args = ["check", "--select", "I", "--fix", "-"]
+    args = ["check", "--select", "I", "--fix", "--stdin-filename", TM_FILEPATH, "-"]
 
     out, err = run :input => input, :args => args
 
@@ -42,7 +42,7 @@ module Linter
   def format_code(options={})
     input = options[:input]
     
-    args = ["format"]
+    args = ["format", "--stdin-filename", TM_FILEPATH]
     args += get_ruff_extra_options if get_ruff_extra_options
     args << "-"
 
@@ -58,7 +58,7 @@ module Linter
     input = options[:input]
     manual = options[:manual]
 
-    args = ["check", "--fix", "--output-format", "grouped"]
+    args = ["check", "--fix", "--output-format", "grouped", "--stdin-filename", TM_FILEPATH]
     args += get_ruff_extra_options if get_ruff_extra_options
     args += ["--config", get_ruff_config_file] if get_ruff_config_file && manual
     args += ["--stdin-filename", TM_FILENAME, "-"]
