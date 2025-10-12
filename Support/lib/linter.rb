@@ -34,7 +34,7 @@ module Linter
       "check",
       "--select", "I",
       "--fix",
-      "--stdin-filename", TM_FILEPATH,
+      "--stdin-filename", TM_STDIN_FILENAME,
       "-",
     ]
     args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
@@ -49,7 +49,7 @@ module Linter
   def format_code(options={})
     input = options[:input]
     
-    args = ["format", "--stdin-filename", TM_FILEPATH]
+    args = ["format", "--stdin-filename", TM_STDIN_FILENAME]
     args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
     args << "-"
 
@@ -67,7 +67,7 @@ module Linter
 
     args = ["check", "--fix", "--output-format", "grouped"]
     args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
-    args += ["--stdin-filename", TM_FILENAME, "-"]
+    args += ["--stdin-filename", TM_STDIN_FILENAME, "-"]
 
     out, err = run :input => input,
                    :args => args
