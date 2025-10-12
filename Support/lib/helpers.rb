@@ -168,8 +168,13 @@ module Helpers
 
   def display_result(result, line_count)
     ruff_version = `ruff --version`.chomp
-    config_arg = get_ruff_config_arg.size >= 1 ? get_ruff_config_arg[1] : ''
-    config_arg = config_arg.sub(TM_PROJECT_DIRECTORY, File.basename(TM_PROJECT_DIRECTORY)) if config_arg.start_with?(TM_PROJECT_DIRECTORY)
+    
+    config_args = get_ruff_config_arg
+    config_arg = ''
+    if config_args && config_args.size >= 2
+      config_arg = config_args[1]
+      config_arg = config_arg.sub(TM_PROJECT_DIRECTORY, File.basename(TM_PROJECT_DIRECTORY)) if config_arg.start_with?(TM_PROJECT_DIRECTORY)
+    end
     
     if result[:mark_errors].size == 0
       success_msg = [
