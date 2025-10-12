@@ -168,15 +168,19 @@ module Helpers
 
   def display_result(result, line_count)
     ruff_version = `ruff --version`.chomp
+    config_arg = get_ruff_config_arg.size >= 1 ? get_ruff_config_arg[1] : ''
+    config_arg = config_arg.sub(TM_PROJECT_DIRECTORY, File.basename(TM_PROJECT_DIRECTORY)) if config_arg.start_with?(TM_PROJECT_DIRECTORY)
     
     if result[:mark_errors].size == 0
       success_msg = [
         "🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍",
         "",
-        "🧩 ruff version: #{ruff_version}",
-        "⚙️ config:",
-        "#{get_ruff_config_arg}",
+        "🧩 ruff version: [#{ruff_version}]",
       ]
+      unless config_arg.empty?
+        success_msg << "⚙️ ruff config: [#{config_arg}]"
+      end
+      
       exit_boxify_tool_tip(success_msg.join("\n"))
     end
     
@@ -194,10 +198,6 @@ module Helpers
     output << "📋 Use Option ( ⌥ ) + R to display error report!"
     output << "🔄 Use Option ( ⌥ ) + A to noqalize all problematic lines"
     output << "🛠️ Use Option ( ⌥ ) + F to autofix autofixables"
-    output << ""
-    output << "🧩 ruff version: #{ruff_version}"
-    output << "⚙️ config:"
-    output << "#{get_ruff_config_arg}"
     output << ""
     
     if default_errors_count > 0
@@ -227,6 +227,13 @@ module Helpers
     output.concat(result[:extras]) if result[:extras].size > 0
     
     create_storage(go_to_errors, true) if go_to_errors
+    
+    output << ""
+    output << "🧩 ruff version: [#{ruff_version}]"
+    unless config_arg.empty?
+      output << "⚙️ ruff config: [#{config_arg}]"
+    end
+    output << ""
     
     exit_boxify_tool_tip(output.join("\n"))
   end
