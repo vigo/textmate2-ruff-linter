@@ -170,7 +170,14 @@ module Helpers
     ruff_version = `ruff --version`.chomp
     
     if result[:mark_errors].size == 0
-      exit_boxify_tool_tip("🎉 congrats! \"#{TM_FILENAME}\" has zero errors [#{ruff_version}] 👍")
+      success_msg = [
+        "🎉 congrats! \"#{TM_FILENAME}\" has zero errors 👍",
+        "",
+        "🧩 ruff version: #{ruff_version}",
+        "⚙️ config:",
+        "#{get_ruff_config_arg}",
+      ]
+      exit_boxify_tool_tip(success_msg.join("\n"))
     end
     
     destroy_storage(true)
@@ -182,12 +189,16 @@ module Helpers
     fixable_errors_count = result[:fixable_errors].size
     total_count = default_errors_count + fixable_errors_count
 
-    output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! [#{ruff_version}] ⚠️\n"
+    output << "⚠️ Found #{total_count} #{pluralize(total_count, "error")}! ⚠️\n"
     output << "🔍 Use Option ( ⌥ ) + G to jump error line!"
     output << "📋 Use Option ( ⌥ ) + R to display error report!"
     output << "🔄 Use Option ( ⌥ ) + A to noqalize all problematic lines"
     output << "🛠️ Use Option ( ⌥ ) + F to autofix autofixables"
-    output << "---"
+    output << ""
+    output << "🧩 ruff version: #{ruff_version}"
+    output << "⚙️ config:"
+    output << "#{get_ruff_config_arg}"
+    output << ""
     
     if default_errors_count > 0
       output << "[#{default_errors_count}] default #{pluralize(default_errors_count, "error")}:"
@@ -281,5 +292,11 @@ module Helpers
       return ruff_options
     end
     return nil
+  end
+  
+  def get_ruff_config_arg
+    config_arg = get_ruff_extra_options
+    config_arg = get_ruff_config_file if get_ruff_config_file
+    return config_arg
   end
 end

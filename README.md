@@ -223,6 +223,12 @@ reports**, and **feature requests**.
 
 ## Change Log
 
+**2025-10-12**
+
+- Fix config related bugs; if ruff config exists, overrides `TM_PYRUFF_OPTIONS`
+- Add ruff version and config information to error/success messages
+- Fix "noqalize all", displays better message
+
 **2024-05-29**
 
 - Add `ruff` version to results
