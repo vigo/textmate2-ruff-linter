@@ -295,8 +295,8 @@ module Helpers
   end
   
   def get_ruff_config_arg
-    config_arg = get_ruff_extra_options
-    config_arg = get_ruff_config_file if get_ruff_config_file
-    return config_arg
+    config_file = get_ruff_config_file
+    return ["--config", config_file] if config_file
+    return get_ruff_extra_options
   end
 end

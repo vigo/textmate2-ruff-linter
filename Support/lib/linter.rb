@@ -37,7 +37,7 @@ module Linter
       "--stdin-filename", TM_STDIN_FILENAME,
       "-",
     ]
-    args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
 
     out, err = run :input => input, :args => args
 
@@ -50,7 +50,7 @@ module Linter
     input = options[:input]
     
     args = ["format", "--stdin-filename", TM_STDIN_FILENAME]
-    args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
     args << "-"
 
     out, err = run :input => input,
@@ -66,7 +66,7 @@ module Linter
     manual = options[:manual]
 
     args = ["check", "--fix", "--output-format", "grouped"]
-    args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
     args += ["--stdin-filename", TM_STDIN_FILENAME, "-"]
 
     out, err = run :input => input,
@@ -79,7 +79,7 @@ module Linter
   
   def noqalize(options={})
     args = ["check", "--add-noqa"]
-    args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
 
     out, err = run :args => args
 
@@ -97,7 +97,7 @@ module Linter
     document_line_count = options[:document_line_count]
 
     args = ["check", "--output-format", "grouped"]
-    args += ["--config", get_ruff_config_arg] unless get_ruff_config_arg.nil?
+    args += get_ruff_config_arg unless get_ruff_config_arg.nil?
 
     out, err = run :args => args
 
