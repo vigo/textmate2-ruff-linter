@@ -167,7 +167,7 @@ module Helpers
   end
 
   def display_result(result, line_count)
-    ruff_version = `ruff --version`.chomp
+    ruff_version = `#{TM_PYRUFF} --version`.chomp
     
     config_args = get_ruff_config_arg
     config_arg = ''
