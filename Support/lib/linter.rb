@@ -22,9 +22,9 @@ module Linter
     logger.debug "cmd: #{cmd} | input.nil? #{input.nil?} | args: #{args.inspect} | input: #{input.nil? ? TM_FILEPATH : "stdin"}"
     
     if input.nil?
-      return TextMate::Process.run(cmd, args, TM_FILEPATH)
+      return TextMate::Process.run(cmd, args, TM_FILEPATH, { :chdir => TM_PROJECT_DIRECTORY })
     else
-      return TextMate::Process.run(cmd, args, :input => input)
+      return TextMate::Process.run(cmd, args, { :input => input, :chdir => TM_PROJECT_DIRECTORY })
     end
   end
 
@@ -34,7 +34,7 @@ module Linter
       "check",
       "--select", "I",
       "--fix",
-      "--stdin-filename", TM_FILENAME,
+      "--stdin-filename", TM_FILEPATH,
       "-",
     ]
     args += get_ruff_config_arg unless get_ruff_config_arg.nil?
@@ -49,7 +49,7 @@ module Linter
   def format_code(options={})
     input = options[:input]
     
-    args = ["format", "--stdin-filename", TM_FILENAME]
+    args = ["format", "--stdin-filename", TM_FILEPATH]
     args += get_ruff_config_arg unless get_ruff_config_arg.nil?
     args << "-"
 
@@ -67,7 +67,7 @@ module Linter
 
     args = ["check", "--fix", "--output-format", "grouped"]
     args += get_ruff_config_arg unless get_ruff_config_arg.nil?
-    args += ["--stdin-filename", TM_FILENAME, "-"]
+    args += ["--stdin-filename", TM_FILEPATH, "-"]
 
     out, err = run :input => input,
                    :args => args

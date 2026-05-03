@@ -25,9 +25,9 @@ module RuffLinter
     args = ["check", "--output-format", "grouped"]
     args += ["--config", get_ruff_config_file] if get_ruff_config_file
     args += get_ruff_extra_options if get_ruff_extra_options
-    args += ["--stdin-filename", TM_FILENAME]
+    args += ["--stdin-filename", TM_FILEPATH]
 
-    out, err = TextMate::Process.run(cmd, args, :input => input)
+    out, err = TextMate::Process.run(cmd, args, { :input => input, :chdir => TM_PROJECT_DIRECTORY })
     logger.debug "input:\n#{input.inspect}"
     logger.debug "out:\n#{out.inspect}"
     logger.error "err: #{err.inspect}"
